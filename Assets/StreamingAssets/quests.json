@@ -1,0 +1,42 @@
+{
+  "quests": [
+    {
+      "id": "quest_fractured_slimes",
+      "title": "Fractured Slimes",
+      "description": "Clear temporal slimes corrupting the echo fields.",
+      "quest_giver_name": "Chrono Sage",
+      "objectives": [
+        {
+          "type": "KillEnemy",
+          "target_id": "slime",
+          "required_count": 3,
+          "description": "Slay corrupted slimes"
+        }
+      ],
+      "rewards": {
+        "experience": 120,
+        "gold": 25,
+        "item_id": "chrono_shard"
+      }
+    },
+    {
+      "id": "quest_bone_echoes",
+      "title": "Bone Echoes",
+      "description": "Destroy skeleton echoes guarding the fracture altar.",
+      "quest_giver_name": "Chrono Sage",
+      "objectives": [
+        {
+          "type": "KillEnemy",
+          "target_id": "skeleton",
+          "required_count": 2,
+          "description": "Defeat skeleton echoes"
+        }
+      ],
+      "rewards": {
+        "experience": 180,
+        "gold": 40,
+        "item_id": "hourglass_fragment"
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "AetherEcho.Editor",
+  "rootNamespace": "AetherEcho.Editor",
+  "references": [
+    "AetherEcho",
+    "Mirror",
+    "Mirror.Transports"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

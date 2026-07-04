@@ -1,0 +1,40 @@
+{
+  "classes": [
+    {
+      "class_name": "Chrono-Knight",
+      "base_stats": {
+        "health": 220,
+        "mana": 80,
+        "strength": 14,
+        "intelligence": 10,
+        "agility": 8
+      },
+      "stat_growth_per_level": {
+        "health": 25,
+        "mana": 8,
+        "strength": 2.2,
+        "intelligence": 1.1,
+        "agility": 0.8
+      },
+      "weapon_proficiencies": ["TwoHandedSword", "HourglassShield"]
+    },
+    {
+      "class_name": "Mage",
+      "base_stats": {
+        "health": 140,
+        "mana": 160,
+        "strength": 6,
+        "intelligence": 18,
+        "agility": 10
+      },
+      "stat_growth_per_level": {
+        "health": 14,
+        "mana": 18,
+        "strength": 0.8,
+        "intelligence": 2.5,
+        "agility": 1.0
+      },
+      "weapon_proficiencies": ["Staff", "Orb"]
+    }
+  ]
+}

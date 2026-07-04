@@ -1,0 +1,134 @@
+{
+  "spells": [
+    {
+      "id": "sp_chronoblast_01",
+      "name": "Chrono-Blast",
+      "description": "Fires a temporal beam that explodes, leaving a Time Echo at the impact site.",
+      "allowed_classes": ["Mage", "Chrono-Knight"],
+      "required_level": 1,
+      "icon_texture": "assets/icons/spells/chronoblast.png",
+      "vfx_prefab": "vfx_chrono_beam",
+      "casting_rules": {
+        "cast_time_seconds": 0.6,
+        "cooldown_seconds": 4.0,
+        "resource_type": "Mana",
+        "resource_cost": 30,
+        "requires_line_of_sight": true,
+        "can_cast_while_moving": false
+      },
+      "targeting": {
+        "type": "DirectionalLine",
+        "range_meters": 12.0,
+        "radius_meters": 1.8,
+        "max_targets": 5,
+        "valid_relations": ["Enemy", "Destructible"]
+      },
+      "payload": {
+        "instant_damage_magical": 85,
+        "damage_scaling_stat": "Intelligence",
+        "scaling_factor": 1.4,
+        "applied_status_effects": [
+          {
+            "effect_id": "se_temporal_slow",
+            "duration_seconds": 3.0,
+            "potency": 0.30
+          }
+        ],
+        "spawn_entity_on_impact": {
+          "blueprint_id": "ent_time_echo",
+          "duration_seconds": 8.0
+        }
+      }
+    },
+    {
+      "id": "sp_temporal_bolt",
+      "name": "Temporal Bolt",
+      "description": "A fast arcane bolt fired toward the cursor.",
+      "allowed_classes": ["Mage"],
+      "required_level": 1,
+      "icon_texture": "assets/icons/spells/temporalbolt.png",
+      "vfx_prefab": "vfx_temporal_bolt",
+      "casting_rules": {
+        "cast_time_seconds": 0.2,
+        "cooldown_seconds": 1.5,
+        "resource_type": "Mana",
+        "resource_cost": 12,
+        "requires_line_of_sight": true,
+        "can_cast_while_moving": true
+      },
+      "targeting": {
+        "type": "DirectionalLine",
+        "range_meters": 10.0,
+        "radius_meters": 1.0,
+        "max_targets": 3,
+        "valid_relations": ["Enemy"]
+      },
+      "payload": {
+        "instant_damage_magical": 38,
+        "damage_scaling_stat": "Intelligence",
+        "scaling_factor": 1.1,
+        "applied_status_effects": []
+      }
+    },
+    {
+      "id": "sp_mana_surge",
+      "name": "Mana Surge",
+      "description": "Releases chrono energy around you, healing allies and damaging nearby foes.",
+      "allowed_classes": ["Mage"],
+      "required_level": 1,
+      "icon_texture": "assets/icons/spells/manasurge.png",
+      "vfx_prefab": "vfx_mana_surge",
+      "casting_rules": {
+        "cast_time_seconds": 0.5,
+        "cooldown_seconds": 6.0,
+        "resource_type": "Mana",
+        "resource_cost": 35,
+        "requires_line_of_sight": false,
+        "can_cast_while_moving": false
+      },
+      "targeting": {
+        "type": "SelfAOE",
+        "range_meters": 0.0,
+        "radius_meters": 4.5,
+        "max_targets": 12,
+        "valid_relations": ["Enemy", "Ally", "Self"]
+      },
+      "payload": {
+        "instant_damage_magical": 55,
+        "damage_scaling_stat": "Intelligence",
+        "scaling_factor": 0.8,
+        "applied_status_effects": []
+      }
+    },
+    {
+      "id": "sp_echo_cone_01",
+      "name": "Echo Sweep",
+      "description": "A cone of chrono energy that marks enemies for echo detonation.",
+      "allowed_classes": ["Chrono-Knight"],
+      "required_level": 3,
+      "icon_texture": "assets/icons/spells/echosweep.png",
+      "vfx_prefab": "vfx_echo_cone",
+      "casting_rules": {
+        "cast_time_seconds": 0.8,
+        "cooldown_seconds": 5.0,
+        "resource_type": "Mana",
+        "resource_cost": 25,
+        "requires_line_of_sight": false,
+        "can_cast_while_moving": true
+      },
+      "targeting": {
+        "type": "Cone",
+        "range_meters": 6.0,
+        "radius_meters": 60.0,
+        "max_targets": 8,
+        "valid_relations": ["Enemy"]
+      },
+      "payload": {
+        "instant_damage_physical": 55,
+        "damage_scaling_stat": "Strength",
+        "scaling_factor": 0.9,
+        "applied_status_effects": []
+      }
+    }
+  ]
+}

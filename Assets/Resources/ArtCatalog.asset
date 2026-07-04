@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 111c0933228ee66429473c2822fb7a91, type: 3}
+  m_Name: ArtCatalog
+  m_EditorClassIdentifier: 
+  heroSouth: {fileID: -1725898018, guid: b011d091d38ab2f499a1a067bd29d471, type: 3}
+  heroNorth: {fileID: -783453795, guid: b011d091d38ab2f499a1a067bd29d471, type: 3}
+  heroEast: {fileID: -1131726670, guid: b011d091d38ab2f499a1a067bd29d471, type: 3}
+  slime: {fileID: -995825184, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  skeleton: {fileID: -1797346199, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  questNpc: {fileID: 1604015474, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorA: {fileID: -1666500734, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorB: {fileID: -1595162582, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorGrass: {fileID: 21300000, guid: 463bf43b4efc7094a8bb8d843ac84144, type: 3}
+  tree: {fileID: 21300000, guid: b08bd11b5633c544c9fb2f0ca8abbf6c, type: 3}
+  rock: {fileID: 21300000, guid: 4f4a43c02e9b93d45873220f7671a51c, type: 3}
+  trees:
+  - {fileID: 21300000, guid: b08bd11b5633c544c9fb2f0ca8abbf6c, type: 3}
+  - {fileID: 21300000, guid: a725bad627200b54eb653f38743d3ea0, type: 3}
+  - {fileID: 21300000, guid: 5bb6825a1ba237b44a1082dd2b871e15, type: 3}
+  - {fileID: 21300000, guid: 0f25221b2475e9b48a184e291bce828a, type: 3}
+  - {fileID: 21300000, guid: 1bb9969c3b1129c42acfd809c9a6367e, type: 3}
+  rocks:
+  - {fileID: 21300000, guid: 81ae6a3c34737dc4c9aca2d1a5a286d9, type: 3}
+  - {fileID: 21300000, guid: 4f4a43c02e9b93d45873220f7671a51c, type: 3}
+  - {fileID: 21300000, guid: cf6d7a990488ab14d9592e374aca711a, type: 3}
+  - {fileID: 21300000, guid: f11585fe0eb7a1f4fa803789bd74d9f8, type: 3}
+  - {fileID: 21300000, guid: aaac9bf229322a0468c5ec13a1c66bde, type: 3}
+  bushes:
+  - {fileID: 21300000, guid: d0e09df2c0cd6f54caf04be6032ee884, type: 3}
+  - {fileID: 21300000, guid: 494a9d76127f1d84ca8d7e6547001557, type: 3}
+  - {fileID: 21300000, guid: 389efc51ccd43e34d89507fb9a001565, type: 3}
+  - {fileID: 21300000, guid: f9c90bf754d45b0499d0b314814393b8, type: 3}
+  mushrooms:
+  - {fileID: 21300000, guid: 2c1e57af3c585ba4791a764e20f8e0d9, type: 3}
+  - {fileID: 21300000, guid: 385a9fe6307a97541bbfb6c59e1e5032, type: 3}
+  - {fileID: 21300000, guid: b10fe51f75dd5da4da6e60549ada06d6, type: 3}
+  - {fileID: 21300000, guid: a71007b731f3d27499af99f02f0a0798, type: 3}
+  reeds:
+  - {fileID: 21300000, guid: e662e24024699ee4b9e4e2482f43b262, type: 3}
+  - {fileID: 21300000, guid: 24d83c5cb47f2f5418623a16b6c06e0b, type: 3}
+  - {fileID: 21300000, guid: 835d3e99dc2be514f80882adb71ad4fd, type: 3}
+  spellBeam: {fileID: 89606257, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}
+  spellBurst: {fileID: -649211228, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}
+  spellPulse: {fileID: 34130148, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}
+  timeEcho: {fileID: -210742867, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}
