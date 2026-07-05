@@ -45,8 +45,10 @@ namespace AetherEcho.World
         private void BuildEnvironment()
         {
             ArtCatalog art = ArtAssetResolver.Catalog;
+            DungeonTaleTileCatalog tiles = DungeonTaleTileCatalogLoader.Catalog;
             var worldRoot = new GameObject("WorldContent");
-            WorldBiomeBuilder.BuildChunkGrid(worldRoot.transform, art, WorldSeed);
+            WorldAtmosphere.ApplyDrakantosStyle();
+            DungeonTaleWorldBuilder.BuildWorld(worldRoot.transform, tiles, art, WorldSeed);
             CreateDirectionalLightIfMissing();
         }
 
@@ -92,7 +94,7 @@ namespace AetherEcho.World
                 npcScale,
                 addObstacleCollider: false,
                 isTree: false,
-                facingMode: SpriteFacingMode.BillboardY);
+                facingMode: SpriteFacingMode.FixedSouth);
             npc.AddComponent<QuestNpcInteractable>();
             SphereCollider collider = npc.AddComponent<SphereCollider>();
             collider.radius = 0.9f;
@@ -119,11 +121,12 @@ namespace AetherEcho.World
             var enemyObject = new GameObject("Enemy_" + typeId);
             enemyObject.transform.position = FlatMovementUtility.SnapToGround(position);
             WorldPropBuilder.AddFlatHitCollider(enemyObject, GameConstants.EnemyCollisionRadius);
-            enemyObject.AddComponent<NetworkIdentity>();
             enemyObject.AddComponent<CombatantState>();
             enemyObject.AddComponent<PixelBillboardVisual>();
             enemyObject.AddComponent<NetworkedEnemy>();
             enemyObject.AddComponent<EnemyDeathNotifier>();
+            // NetworkIdentity must be added after all NetworkBehaviour components so Awake wires netIdentity.
+            enemyObject.AddComponent<NetworkIdentity>();
             return enemyObject;
         }
     }

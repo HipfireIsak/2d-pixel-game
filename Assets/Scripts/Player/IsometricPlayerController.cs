@@ -45,6 +45,8 @@ namespace AetherEcho.Player
             }
 
             cameraRig = LostArkCameraRig.Ensure(playerCamera, transform);
+            WorldAtmosphere.ApplyToCamera(playerCamera);
+            WorldAtmosphere.ApplyDrakantosStyle();
         }
 
         private void Update()

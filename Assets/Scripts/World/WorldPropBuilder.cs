@@ -25,12 +25,13 @@ namespace AetherEcho.World
             groundRoot.transform.localPosition = Vector3.zero;
 
             Vector2 tileSize = tileA.bounds.size;
-            float tileWidth = tileSize.x;
-            float tileDepth = tileSize.y;
+            float tileWidth = tileSize.x * 0.985f;
+            float tileDepth = tileSize.y * 0.985f;
             int countX = Mathf.CeilToInt(worldWidth / tileWidth);
             int countZ = Mathf.CeilToInt(worldDepth / tileDepth);
             float startX = (-worldWidth * 0.5f) + (tileWidth * 0.5f);
             float startZ = (-worldDepth * 0.5f) + (tileDepth * 0.5f);
+            Vector3 chunkOrigin = parent != null ? parent.position : Vector3.zero;
 
             for (int x = 0; x < countX; x++)
             {
@@ -38,15 +39,16 @@ namespace AetherEcho.World
                 {
                     var tile = new GameObject($"Floor_{x}_{z}");
                     tile.transform.SetParent(groundRoot.transform, false);
-                    tile.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                    tile.transform.rotation = Quaternion.identity;
+                    float localZ = startZ + (z * tileDepth);
                     tile.transform.localPosition = new Vector3(
                         startX + (x * tileWidth),
                         GameConstants.FloorVisualHeight,
-                        startZ + (z * tileDepth));
+                        localZ);
 
                     var renderer = tile.AddComponent<SpriteRenderer>();
                     renderer.sprite = ((x + z) & 1) == 0 ? tileA : tileB;
-                    renderer.sortingOrder = GameConstants.GroundSortingOrder;
+                    ApplyGroundSorting(renderer, chunkOrigin.z + localZ);
                 }
             }
 
@@ -158,7 +160,7 @@ namespace AetherEcho.World
             return prop;
         }
 
-        public static void ApplyDepthSorting(SpriteRenderer renderer, Vector3 worldPosition)
+        public static void ApplyGroundSorting(SpriteRenderer renderer, float worldZ)
         {
             if (renderer == null)
             {
@@ -166,8 +168,40 @@ namespace AetherEcho.World
             }
 
             renderer.sortingOrder = GameConstants.GroundSortingOrder
-                                    + GameConstants.EntitySortingBaseOffset
+                                    + Mathf.RoundToInt(worldZ * GameConstants.GroundSortingOrderPerMeter);
+        }
+
+        public static void ApplyDepthSorting(SpriteRenderer renderer, Vector3 worldPosition)
+        {
+            if (renderer == null)
+            {
+                return;
+            }
+
+            renderer.sortingOrder = GameConstants.EntitySortingBaseOffset
                                     + Mathf.RoundToInt(-worldPosition.z * GameConstants.SortingOrderPerMeter);
+        }
+
+        public static void CreateChunkUnderlay(Transform parent, float chunkSize, Color tint, Sprite fillSprite)
+        {
+            if (fillSprite == null)
+            {
+                return;
+            }
+
+            var underlay = new GameObject("ChunkUnderlay");
+            underlay.transform.SetParent(parent, false);
+            underlay.transform.localPosition = new Vector3(0f, -0.02f, 0f);
+            underlay.transform.rotation = Quaternion.identity;
+
+            var renderer = underlay.AddComponent<SpriteRenderer>();
+            renderer.sprite = fillSprite;
+            renderer.color = tint;
+            renderer.sortingOrder = GameConstants.GroundSortingOrder - 500;
+
+            float native = Mathf.Max(fillSprite.bounds.size.x, fillSprite.bounds.size.y);
+            float scale = native > 0.001f ? chunkSize / native : chunkSize;
+            underlay.transform.localScale = Vector3.one * scale;
         }
 
         private static void AddFlatObstacleCollider(GameObject prop, Sprite sprite, float scale, bool isTree)

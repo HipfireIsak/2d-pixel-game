@@ -20,6 +20,7 @@ namespace AetherEcho.Core
             EnsureComponent<UI.GameplayHud>();
             EnsureComponent<UI.SpellGroundTargeting>();
             EnsureComponent<UI.QuestDialogUI>();
+            EnsureComponent<UI.MinimapUI>();
             DontDestroyOnLoad(gameObject);
         }
 

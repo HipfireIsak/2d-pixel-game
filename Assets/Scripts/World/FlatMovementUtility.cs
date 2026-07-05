@@ -57,7 +57,7 @@ namespace AetherEcho.World
                 return 0.5f * scale;
             }
 
-            return sprite.bounds.extents.y * scale;
+            return sprite.bounds.extents.y * scale + GameConstants.EntityVisualLift;
         }
     }
 }

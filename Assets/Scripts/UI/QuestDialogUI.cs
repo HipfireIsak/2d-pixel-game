@@ -8,14 +8,20 @@ namespace AetherEcho.UI
     {
         public static QuestDialogUI Instance { get; private set; }
 
+        private enum DialogMode
+        {
+            Offer,
+            TurnIn
+        }
+
         private QuestDefinition pendingQuest;
         private NetworkedCombatant localPlayer;
+        private DialogMode mode;
         private bool isOpen;
 
         private GUIStyle titleStyle;
         private GUIStyle bodyStyle;
         private GUIStyle rewardStyle;
-        private GUIStyle buttonStyle;
 
         private void Awake()
         {
@@ -32,6 +38,21 @@ namespace AetherEcho.UI
 
             localPlayer = player;
             pendingQuest = quest;
+            mode = DialogMode.Offer;
+            isOpen = true;
+        }
+
+        public void ShowQuestTurnIn(NetworkedCombatant player, string questId)
+        {
+            if (QuestManager.Instance == null || !QuestManager.Instance.TryGetQuest(questId, out QuestDefinition quest))
+            {
+                GameplayHud.Instance?.SetToast("Quest unavailable.");
+                return;
+            }
+
+            localPlayer = player;
+            pendingQuest = quest;
+            mode = DialogMode.TurnIn;
             isOpen = true;
         }
 
@@ -60,31 +81,40 @@ namespace AetherEcho.UI
             EnsureStyles();
 
             float width = 420f;
-            float height = 320f;
+            float height = mode == DialogMode.TurnIn ? 280f : 320f;
             var panel = new Rect((Screen.width - width) * 0.5f, (Screen.height - height) * 0.5f, width, height);
             GUI.Box(panel, string.Empty);
 
             float y = panel.y + 16f;
-            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 28f), pendingQuest.title, titleStyle);
+            string header = mode == DialogMode.TurnIn ? "Turn In Quest" : pendingQuest.title;
+            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 28f), header, titleStyle);
             y += 32f;
-            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 22f), "Offered by: " + pendingQuest.quest_giver_name, bodyStyle);
+            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 22f), "Chrono Sage", bodyStyle);
             y += 26f;
-            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 48f), pendingQuest.description, bodyStyle);
+
+            string body = mode == DialogMode.TurnIn
+                ? "Well done, time-weaver. Your objectives are complete. Claim your reward."
+                : pendingQuest.description;
+            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 48f), body, bodyStyle);
             y += 52f;
 
-            GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 22f), "Objectives", titleStyle);
-            y += 24f;
-            foreach (QuestObjectiveDefinition objective in pendingQuest.objectives)
+            if (mode == DialogMode.Offer)
             {
-                string line = "- " + (string.IsNullOrEmpty(objective.description)
-                    ? objective.type + " " + objective.target_id
-                    : objective.description);
-                line += " (" + objective.required_count + ")";
-                GUI.Label(new Rect(panel.x + 24f, y, width - 48f, 22f), line, bodyStyle);
-                y += 22f;
+                GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 22f), "Objectives", titleStyle);
+                y += 24f;
+                foreach (QuestObjectiveDefinition objective in pendingQuest.objectives)
+                {
+                    string line = "- " + (string.IsNullOrEmpty(objective.description)
+                        ? objective.type + " " + objective.target_id
+                        : objective.description);
+                    line += " (" + objective.required_count + ")";
+                    GUI.Label(new Rect(panel.x + 24f, y, width - 48f, 22f), line, bodyStyle);
+                    y += 22f;
+                }
+
+                y += 8f;
             }
 
-            y += 8f;
             QuestRewardDefinition rewards = pendingQuest.rewards;
             string rewardText = "Rewards: " + rewards.experience + " XP, " + rewards.gold + " gold";
             if (!string.IsNullOrEmpty(rewards.item_id))
@@ -95,14 +125,29 @@ namespace AetherEcho.UI
             GUI.Label(new Rect(panel.x + 16f, y, width - 32f, 22f), rewardText, rewardStyle);
             y += 36f;
 
-            if (GUI.Button(new Rect(panel.x + 16f, y, 180f, 34f), "Accept Quest"))
+            if (mode == DialogMode.TurnIn)
             {
-                AcceptQuest();
-            }
+                if (GUI.Button(new Rect(panel.x + 16f, y, 180f, 34f), "Turn In Quest"))
+                {
+                    TurnInQuest();
+                }
 
-            if (GUI.Button(new Rect(panel.x + width - 196f, y, 180f, 34f), "Decline"))
+                if (GUI.Button(new Rect(panel.x + width - 196f, y, 180f, 34f), "Not Yet"))
+                {
+                    Close();
+                }
+            }
+            else
             {
-                Close();
+                if (GUI.Button(new Rect(panel.x + 16f, y, 180f, 34f), "Accept Quest"))
+                {
+                    AcceptQuest();
+                }
+
+                if (GUI.Button(new Rect(panel.x + width - 196f, y, 180f, 34f), "Decline"))
+                {
+                    Close();
+                }
             }
         }
 
@@ -111,6 +156,16 @@ namespace AetherEcho.UI
             if (localPlayer != null && pendingQuest != null)
             {
                 localPlayer.CmdAcceptQuest(pendingQuest.id);
+            }
+
+            Close();
+        }
+
+        private void TurnInQuest()
+        {
+            if (localPlayer != null)
+            {
+                localPlayer.CmdTurnInQuest();
             }
 
             Close();
@@ -137,7 +192,6 @@ namespace AetherEcho.UI
                 fontStyle = FontStyle.Italic,
                 normal = { textColor = new Color(0.85f, 0.78f, 0.35f) }
             };
-            buttonStyle = new GUIStyle(GUI.skin.button) { fontSize = 14 };
         }
     }
 }

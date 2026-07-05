@@ -17,38 +17,156 @@ MonoBehaviour:
   heroEast: {fileID: -1131726670, guid: b011d091d38ab2f499a1a067bd29d471, type: 3}
   slime: {fileID: -995825184, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
   skeleton: {fileID: -1797346199, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  bat: {fileID: 94621673, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  rat: {fileID: 185838283, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  snake: {fileID: -1721448698, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  eye: {fileID: 1725372122, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  sunflower: {fileID: -244875748, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
   questNpc: {fileID: 1604015474, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
   floorA: {fileID: -1666500734, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
   floorB: {fileID: -1595162582, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
-  floorGrass: {fileID: 21300000, guid: 463bf43b4efc7094a8bb8d843ac84144, type: 3}
-  tree: {fileID: 21300000, guid: b08bd11b5633c544c9fb2f0ca8abbf6c, type: 3}
-  rock: {fileID: 21300000, guid: 4f4a43c02e9b93d45873220f7671a51c, type: 3}
-  trees:
+  floorC: {fileID: 425766875, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorD: {fileID: -1071430000, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorWood: {fileID: -825250436, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorMetal: {fileID: 347329323, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorRed: {fileID: 1933650392, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorDirt: {fileID: -570979032, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  floorFlash: {fileID: 963518308, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  carpetA: {fileID: -1455102901, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  carpetB: {fileID: 2080420847, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  tree: {fileID: 2061441458, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  rock: {fileID: -1752388792, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  propsGrass:
+  - {fileID: -1618667294, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1708659442, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -484180597, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1356355480, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  propsForest:
+  - {fileID: 2061441458, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1391007285, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1789686361, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  propsRock:
+  - {fileID: -1752388792, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -684481851, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -886250686, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -484646789, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -1789572953, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  propsWild:
+  - {fileID: -1134052594, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 303788756, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1264957957, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -99156351, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -346474338, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  propsRuin:
+  - {fileID: -1506547402, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -795952930, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -316403093, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1372235865, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1151381906, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  propsHub:
+  - {fileID: 1372235865, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -970533305, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1708659442, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  decorGrass:
+  - {fileID: -1618667294, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1708659442, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -484180597, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -1525626827, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1319269089, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  decorForest:
+  - {fileID: -1525626827, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1319269089, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -816199579, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 158396877, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  decorRock:
+  - {fileID: -684481851, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -1752388792, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -886250686, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  decorWild:
+  - {fileID: -1134052594, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 303788756, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  decorRuin:
+  - {fileID: 585907288, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -139847526, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1984791423, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: -284209811, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  decorHub:
+  - {fileID: 1708659442, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  - {fileID: 1372235865, guid: b631ed305dfd43c488e0f8edf5c829bc, type: 3}
+  medievalFloors:
+  - {fileID: 21300000, guid: cf57b3e7835b02e4493371d9bc259b1b, type: 3}
+  - {fileID: 21300002, guid: cf57b3e7835b02e4493371d9bc259b1b, type: 3}
+  - {fileID: 21300004, guid: cf57b3e7835b02e4493371d9bc259b1b, type: 3}
+  - {fileID: 21300006, guid: cf57b3e7835b02e4493371d9bc259b1b, type: 3}
+  - {fileID: 21300008, guid: cf57b3e7835b02e4493371d9bc259b1b, type: 3}
+  - {fileID: 21300010, guid: cf57b3e7835b02e4493371d9bc259b1b, type: 3}
+  medievalProps:
+  - {fileID: 21300000, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300002, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300004, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300006, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300008, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300010, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300012, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300014, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300016, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300018, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300020, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  - {fileID: 21300022, guid: ae3918a914038694d852d0bb81f62473, type: 3}
+  jungleGrass:
+  - {fileID: 21300000, guid: 744d6da8b4b3f9e4295710599625c612, type: 3}
+  - {fileID: 21300000, guid: 463bf43b4efc7094a8bb8d843ac84144, type: 3}
+  - {fileID: 21300000, guid: 871040d088c6f31439fbeadaaa430bcf, type: 3}
+  - {fileID: 21300000, guid: 3e66ebab3fb881847ba25865cd9b18c2, type: 3}
+  - {fileID: 21300000, guid: 53ad123a96553514e980162281f608f7, type: 3}
+  - {fileID: 21300000, guid: dbdda876d6126804e8bc3bd3f108638f, type: 3}
+  - {fileID: 21300000, guid: f5c2edab13d54c44190ebe0f754d03f4, type: 3}
+  jungleTrees:
   - {fileID: 21300000, guid: b08bd11b5633c544c9fb2f0ca8abbf6c, type: 3}
   - {fileID: 21300000, guid: a725bad627200b54eb653f38743d3ea0, type: 3}
   - {fileID: 21300000, guid: 5bb6825a1ba237b44a1082dd2b871e15, type: 3}
+  - {fileID: 21300000, guid: 133f87331fd9db042b4334a725871edd, type: 3}
+  - {fileID: 21300000, guid: e7bc078997558ba4dbd801279e563934, type: 3}
   - {fileID: 21300000, guid: 0f25221b2475e9b48a184e291bce828a, type: 3}
   - {fileID: 21300000, guid: 1bb9969c3b1129c42acfd809c9a6367e, type: 3}
-  rocks:
+  jungleRocks:
   - {fileID: 21300000, guid: 81ae6a3c34737dc4c9aca2d1a5a286d9, type: 3}
   - {fileID: 21300000, guid: 4f4a43c02e9b93d45873220f7671a51c, type: 3}
   - {fileID: 21300000, guid: cf6d7a990488ab14d9592e374aca711a, type: 3}
   - {fileID: 21300000, guid: f11585fe0eb7a1f4fa803789bd74d9f8, type: 3}
   - {fileID: 21300000, guid: aaac9bf229322a0468c5ec13a1c66bde, type: 3}
-  bushes:
+  - {fileID: 21300000, guid: d7363c34b7881e346a1e14ec891f1b51, type: 3}
+  jungleVegetation:
   - {fileID: 21300000, guid: d0e09df2c0cd6f54caf04be6032ee884, type: 3}
-  - {fileID: 21300000, guid: 494a9d76127f1d84ca8d7e6547001557, type: 3}
-  - {fileID: 21300000, guid: 389efc51ccd43e34d89507fb9a001565, type: 3}
-  - {fileID: 21300000, guid: f9c90bf754d45b0499d0b314814393b8, type: 3}
-  mushrooms:
+  - {fileID: 21300000, guid: 4e6ade12c0095e0498cad005dd45614b, type: 3}
+  - {fileID: 21300000, guid: e0cb1bd0b4d23464eb6f670baf874d15, type: 3}
   - {fileID: 21300000, guid: 2c1e57af3c585ba4791a764e20f8e0d9, type: 3}
   - {fileID: 21300000, guid: 385a9fe6307a97541bbfb6c59e1e5032, type: 3}
   - {fileID: 21300000, guid: b10fe51f75dd5da4da6e60549ada06d6, type: 3}
-  - {fileID: 21300000, guid: a71007b731f3d27499af99f02f0a0798, type: 3}
-  reeds:
   - {fileID: 21300000, guid: e662e24024699ee4b9e4e2482f43b262, type: 3}
-  - {fileID: 21300000, guid: 24d83c5cb47f2f5418623a16b6c06e0b, type: 3}
-  - {fileID: 21300000, guid: 835d3e99dc2be514f80882adb71ad4fd, type: 3}
+  - {fileID: 21300000, guid: 494a9d76127f1d84ca8d7e6547001557, type: 3}
+  - {fileID: 21300000, guid: cdf6ce40c84b2fc428d7e19400eb1311, type: 3}
+  - {fileID: 21300000, guid: 38def79ca0ce385458b5bf1b71de12b9, type: 3}
+  handcraftedMoss:
+  - {fileID: 21300000, guid: 8f29ec7629da1f54d824690b0931bf62, type: 3}
+  - {fileID: 21300000, guid: 8f801f15b4e74db4382b14b5d5c07eac, type: 3}
+  - {fileID: 21300000, guid: af1571e0b344c454e907dbe1b0d8cb2b, type: 3}
+  - {fileID: 21300000, guid: 9f24c43c10f28704db98d0b5524be0f5, type: 3}
+  - {fileID: 21300000, guid: df612007082e02c47a1d1ad9eb7074fa, type: 3}
+  gameItemDecor:
+  - {fileID: 21300000, guid: e275e9f15c58d384f9346765f69e49d1, type: 3}
+  - {fileID: 21300000, guid: 405f359d0ed349e439b3e500b5f55c8a, type: 3}
+  - {fileID: 21300000, guid: c5eceadfabbf8214abff1dad1b45500c, type: 3}
+  - {fileID: 21300000, guid: d625705c2b10393418fa45b27c7370b0, type: 3}
+  - {fileID: 21300000, guid: db87746129cc599478e1ae8cecedefd7, type: 3}
+  - {fileID: 21300000, guid: 50a947e39c924a34190e2127f6d76ebb, type: 3}
+  - {fileID: 21300000, guid: 59dceeb1278244b429441fc1a4d16dc7, type: 3}
+  - {fileID: 21300000, guid: b791d37cdec063e4abd56e980fc82f77, type: 3}
+  hillsBackdrop:
+  - {fileID: 21300000, guid: b8657fe1ee4ab734c910b161488d1cfd, type: 3}
+  - {fileID: 21300000, guid: 3f4b3d177ea855b4a833411dbe376d50, type: 3}
+  - {fileID: 21300000, guid: 6db0991689d232641939ba1ec79be9d7, type: 3}
+  - {fileID: 21300000, guid: e8a5841827c9a5f4ebd5bce5b5fd76ce, type: 3}
   spellBeam: {fileID: 89606257, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}
   spellBurst: {fileID: -649211228, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}
   spellPulse: {fileID: 34130148, guid: 10d50abb8562b384ea57d3080088f3f3, type: 3}

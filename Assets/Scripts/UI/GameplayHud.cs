@@ -12,7 +12,10 @@ namespace AetherEcho.UI
         public static GameplayHud Instance { get; private set; }
 
         private NetworkedCombatant localPlayer;
-        private string questText = "Speak to the Chrono Sage (E) to begin your trial.";
+        private string questText = "Speak to the Chrono Sage (E) at the center hub for quests.";
+        private string questTrackerText = "No active quest";
+        private bool questReadyToTurnIn;
+        private bool showQuestLog;
         private string toastText = string.Empty;
         private float toastTimer;
 
@@ -33,6 +36,7 @@ namespace AetherEcho.UI
         private GUIStyle spellNameStyle;
         private GUIStyle spellMetaStyle;
         private GUIStyle cooldownStyle;
+        private GUIStyle questLogStyle;
 
         private void Awake()
         {
@@ -42,11 +46,18 @@ namespace AetherEcho.UI
         public void BindLocalPlayer(NetworkedCombatant player)
         {
             localPlayer = player;
+            MinimapUI.Instance?.BindLocalPlayer(player);
         }
 
         public void SetQuestText(string text)
         {
             questText = text;
+        }
+
+        public void SetQuestTracker(string trackerText, bool readyToTurnIn)
+        {
+            questTrackerText = trackerText;
+            questReadyToTurnIn = readyToTurnIn;
         }
 
         public void SetToast(string text)
@@ -60,6 +71,11 @@ namespace AetherEcho.UI
             if (toastTimer > 0f)
             {
                 toastTimer -= Time.deltaTime;
+            }
+
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                showQuestLog = !showQuestLog;
             }
         }
 
@@ -75,13 +91,30 @@ namespace AetherEcho.UI
             CombatantState combatant = localPlayer.CombatantState;
             DrawBar(new Rect(24, 18, 220, 18), combatant.CurrentHealth, combatant.MaxHealth, new Color(0.85f, 0.2f, 0.25f));
             DrawBar(new Rect(24, 42, 220, 18), combatant.CurrentMana, combatant.MaxMana, new Color(0.25f, 0.55f, 1f));
+            DrawBar(
+                new Rect(24, 66, 220, 14),
+                combatant.Experience,
+                combatant.ExperienceToNextLevel,
+                new Color(0.55f, 0.35f, 0.95f));
 
-            GUI.Label(new Rect(24, 68, 500, 24), combatant.CharacterClass + " Lv." + combatant.Level, bodyStyle);
+            GUI.Label(new Rect(24, 84, 500, 24), combatant.CharacterClass + " Lv." + combatant.Level, bodyStyle);
             GUI.Label(
-                new Rect(24, 88, 500, 20),
-                "Mana regen: " + localPlayer.GetManaRegenPerSecond().ToString("0.0") + "/s",
+                new Rect(24, 104, 500, 20),
+                "XP " + combatant.Experience + "/" + combatant.ExperienceToNextLevel
+                + "  |  Gold " + combatant.Gold
+                + "  |  Mana regen " + localPlayer.GetManaRegenPerSecond().ToString("0.0") + "/s",
                 bodyStyle);
-            GUI.Label(new Rect(24, 108, 700, 48), questText, bodyStyle);
+
+            Color questColor = questReadyToTurnIn ? new Color(0.95f, 0.85f, 0.35f) : Color.white;
+            Color previous = GUI.color;
+            GUI.color = questColor;
+            GUI.Label(new Rect(24, 126, 700, 48), questText, bodyStyle);
+            GUI.color = previous;
+
+            if (showQuestLog)
+            {
+                DrawQuestLog();
+            }
 
             float spellY = Screen.height - 110;
             GUI.Label(new Rect(24, spellY - 24, 500, 24), "Spells — hotkey opens ground targeting", titleStyle);
@@ -99,8 +132,26 @@ namespace AetherEcho.UI
 
             GUI.Label(
                 new Rect(Screen.width - 320, Screen.height - 32, 300, 24),
-                "Esc: menu | E: talk | 1-3: target spell",
+                "Esc: menu | E: Sage | J: quest log | 1-3: spell",
                 bodyStyle);
+        }
+
+        private void DrawQuestLog()
+        {
+            float width = 320f;
+            float height = 180f;
+            var panel = new Rect(24, 178, width, height);
+            GUI.Box(panel, string.Empty);
+            GUI.Label(new Rect(panel.x + 12, panel.y + 8, width - 24, 22), "Quest Log", titleStyle);
+            GUI.Label(new Rect(panel.x + 12, panel.y + 34, width - 24, 120), questTrackerText, questLogStyle);
+
+            if (questReadyToTurnIn)
+            {
+                GUI.Label(
+                    new Rect(panel.x + 12, panel.y + height - 28, width - 24, 20),
+                    "Return to the Chrono Sage (E) to turn in.",
+                    bodyStyle);
+            }
         }
 
         private void DrawSpellSlot(float x, float y, string hotkey, string spellId)
@@ -162,6 +213,7 @@ namespace AetherEcho.UI
 
             titleStyle = new GUIStyle(GUI.skin.label) { fontSize = 16, fontStyle = FontStyle.Bold };
             bodyStyle = new GUIStyle(GUI.skin.label) { fontSize = 13 };
+            questLogStyle = new GUIStyle(GUI.skin.label) { fontSize = 12, wordWrap = true };
             toastStyle = new GUIStyle(GUI.skin.box) { fontSize = 14, alignment = TextAnchor.MiddleCenter };
             barBackStyle = new GUIStyle(GUI.skin.box);
             barFillStyle = new GUIStyle(GUI.skin.box);

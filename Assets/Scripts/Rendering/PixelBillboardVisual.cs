@@ -88,7 +88,10 @@ namespace AetherEcho.Rendering
             child.transform.localPosition = localOffset;
             child.transform.localScale = Vector3.one * spriteScale;
             spriteRenderer = child.AddComponent<SpriteRenderer>();
-            spriteRenderer.sortingOrder = 100;
+            if (trackedTransform != null)
+            {
+                WorldPropBuilder.ApplyDepthSorting(spriteRenderer, trackedTransform.position);
+            }
         }
 
         private void LateUpdate()

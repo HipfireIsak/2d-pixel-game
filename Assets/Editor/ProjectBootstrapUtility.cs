@@ -4,6 +4,7 @@ using kcp2k;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 using AetherEcho.Combat;
 using AetherEcho.Core;
 using AetherEcho.Enemies;
@@ -46,11 +47,20 @@ namespace AetherEcho.EditorTools
             Directory.CreateDirectory("Assets/Resources/Spells");
 
             ArtCatalog artCatalog = CreateOrUpdateArtCatalog();
+            CreateOrUpdateTileCatalog();
             GameObject slimePrefab = CreateEnemyPrefab("slime", SlimePrefabPath, artCatalog.slime);
             GameObject skeletonPrefab = CreateEnemyPrefab("skeleton", SkeletonPrefabPath, artCatalog.skeleton);
+            GameObject batPrefab = CreateEnemyPrefab("bat", "Assets/Resources/Enemies/bat.prefab", artCatalog.bat);
+            GameObject ratPrefab = CreateEnemyPrefab("rat", "Assets/Resources/Enemies/rat.prefab", artCatalog.rat);
+            GameObject snakePrefab = CreateEnemyPrefab("snake", "Assets/Resources/Enemies/snake.prefab", artCatalog.snake);
+            GameObject eyePrefab = CreateEnemyPrefab("eye", "Assets/Resources/Enemies/eye.prefab", artCatalog.eye);
+            GameObject sunflowerPrefab = CreateEnemyPrefab("sunflower", "Assets/Resources/Enemies/sunflower.prefab", artCatalog.sunflower);
             GameObject spellProjectilePrefab = CreateSpellProjectilePrefab();
             GameObject playerPrefab = CreatePlayerPrefab(artCatalog);
-            GameObject bootstrapPrefab = CreateNetworkBootstrapPrefab(playerPrefab, slimePrefab, skeletonPrefab, spellProjectilePrefab);
+            GameObject bootstrapPrefab = CreateNetworkBootstrapPrefab(
+                playerPrefab,
+                new[] { slimePrefab, skeletonPrefab, batPrefab, ratPrefab, snakePrefab, eyePrefab, sunflowerPrefab },
+                spellProjectilePrefab);
             CreateBootstrapScene(bootstrapPrefab);
 
             AssetDatabase.SaveAssets();
@@ -86,19 +96,21 @@ namespace AetherEcho.EditorTools
             catalog.floorRed = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Red");
             catalog.floorDirt = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Dirt");
             catalog.floorFlash = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Flash");
+            catalog.carpetA = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Carpet_A");
+            catalog.carpetB = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Carpet_B");
             catalog.tree = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Prop_TreeA");
             catalog.rock = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Prop_Skull");
             const string atlas = "Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png";
-            catalog.propsGrass = LoadSprites(atlas, "Prop_GrassA", "Prop_GrassB", "Prop_TreeA", "Prop_Shrooms");
-            catalog.propsForest = LoadSprites(atlas, "Prop_TreeA", "Prop_TreeB", "Prop_TreeC", "Prop_Root_A", "Prop_Root_B");
+            catalog.propsGrass = LoadSprites(atlas, "Prop_GrassA", "Prop_GrassB", "Prop_Green", "Prop_SA");
+            catalog.propsForest = LoadSprites(atlas, "Prop_TreeA", "Prop_TreeB", "Prop_TreeC");
             catalog.propsRock = LoadSprites(atlas, "Prop_Skull", "Prop_Bone", "Prop_Dirt", "Prop_Vase_A", "Prop_Vase_B");
-            catalog.propsWild = LoadSprites(atlas, "Prop_Root_C", "Prop_Root_D", "Prop_Web", "Prop_Bone", "Prop_Dirt");
+            catalog.propsWild = LoadSprites(atlas, "Prop_Shrooms", "Prop_Web", "Prop_Root_C", "Prop_Root_D", "Prop_Hand");
             catalog.propsRuin = LoadSprites(atlas, "Prop_Chain_A", "Prop_Chain_B", "Prop_Pipe_a", "Prop_Candles", "Prop_Vase_C");
-            catalog.propsHub = LoadSprites(atlas, "Prop_GrassA", "Prop_Candles", "Prop_Vase_D");
-            catalog.decorGrass = LoadSprites(atlas, "Prop_GrassA", "Prop_GrassB", "Prop_Green", "Prop_SA");
+            catalog.propsHub = LoadSprites(atlas, "Prop_Candles", "Prop_Vase_D", "Prop_GrassB");
+            catalog.decorGrass = LoadSprites(atlas, "Prop_GrassA", "Prop_GrassB", "Prop_Green", "Prop_SB", "Prop_SC");
             catalog.decorForest = LoadSprites(atlas, "Prop_SB", "Prop_SC", "Prop_Root_E", "Prop_Root_F");
             catalog.decorRock = LoadSprites(atlas, "Prop_Bone", "Prop_Skull", "Prop_Dirt");
-            catalog.decorWild = LoadSprites(atlas, "Prop_Shrooms", "Prop_Web", "Prop_Hand");
+            catalog.decorWild = LoadSprites(atlas, "Prop_Shrooms", "Prop_Web");
             catalog.decorRuin = LoadSprites(atlas, "Prop_Pipe_B", "Prop_Pipe_C", "Prop_Env_A", "Prop_Env_B");
             catalog.decorHub = LoadSprites(atlas, "Prop_GrassB", "Prop_Candles");
             catalog.spellBeam = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_5");
@@ -107,6 +119,38 @@ namespace AetherEcho.EditorTools
             catalog.timeEcho = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_15");
             EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        private static void CreateOrUpdateTileCatalog()
+        {
+            const string path = "Assets/Resources/DungeonTaleTileCatalog.asset";
+            const string tileRoot = "Assets/Tileset/Dungeon Tale/Assets/Tiles/";
+            const string matPath = "Assets/Tileset/Dungeon Tale/Assets/Materials/Main.mat";
+
+            DungeonTaleTileCatalog catalog = AssetDatabase.LoadAssetAtPath<DungeonTaleTileCatalog>(path);
+            if (catalog == null)
+            {
+                catalog = ScriptableObject.CreateInstance<DungeonTaleTileCatalog>();
+                AssetDatabase.CreateAsset(catalog, path);
+            }
+
+            catalog.tileMaterial = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            // Main.mat uses a URP shader graph. Built-in pipeline projects use Sprites/Default at runtime instead.
+            catalog.floorGreen = LoadTile(tileRoot + "Floor Green.asset");
+            catalog.floorWood = LoadTile(tileRoot + "Floor Wood.asset");
+            catalog.floorDirt = LoadTile(tileRoot + "Floor Dirt.asset");
+            catalog.floorRed = LoadTile(tileRoot + "Floor Red.asset");
+            catalog.floorMetal = LoadTile(tileRoot + "Floor Metal.asset");
+            catalog.floorFlash = LoadTile(tileRoot + "Floor Flash.asset");
+            catalog.wall = LoadTile(tileRoot + "Wall.asset");
+            catalog.carpet = LoadTile(tileRoot + "Carpet.asset");
+            catalog.cellSize = new Vector3(1.25f, 1.4375f, 0f);
+            EditorUtility.SetDirty(catalog);
+        }
+
+        private static TileBase LoadTile(string assetPath)
+        {
+            return AssetDatabase.LoadAssetAtPath<TileBase>(assetPath);
         }
 
         private static Sprite LoadSprite(string texturePath, string spriteName = null)
@@ -132,6 +176,17 @@ namespace AetherEcho.EditorTools
             for (int i = 0; i < spriteNames.Length; i++)
             {
                 sprites[i] = LoadSprite(texturePath, spriteNames[i]);
+            }
+
+            return sprites;
+        }
+
+        private static Sprite[] LoadTextureSprites(params string[] texturePaths)
+        {
+            var sprites = new Sprite[texturePaths.Length];
+            for (int i = 0; i < texturePaths.Length; i++)
+            {
+                sprites[i] = LoadSprite(texturePaths[i]);
             }
 
             return sprites;
@@ -176,12 +231,12 @@ namespace AetherEcho.EditorTools
             var enemyRoot = new GameObject("Enemy_" + typeId);
             WorldPropBuilder.AddFlatHitCollider(enemyRoot, GameConstants.EnemyCollisionRadius);
 
-            enemyRoot.AddComponent<NetworkIdentity>();
             enemyRoot.AddComponent<CombatantState>();
             enemyRoot.AddComponent<PixelBillboardVisual>();
             enemyRoot.AddComponent<NetworkedEnemy>();
             enemyRoot.AddComponent<EnemyDeathNotifier>();
-            float scale = 1.1f;
+            enemyRoot.AddComponent<NetworkIdentity>();
+            float scale = GameConstants.EnemyVisualScale;
             float offset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
             enemyRoot.GetComponent<PixelBillboardVisual>().Configure(
                 enemyRoot.transform,
@@ -204,8 +259,7 @@ namespace AetherEcho.EditorTools
 
         private static GameObject CreateNetworkBootstrapPrefab(
             GameObject playerPrefab,
-            GameObject slimePrefab,
-            GameObject skeletonPrefab,
+            GameObject[] enemyPrefabs,
             GameObject spellProjectilePrefab)
         {
             var bootstrapObject = new GameObject("NetworkBootstrap");
@@ -220,8 +274,11 @@ namespace AetherEcho.EditorTools
             networkManager.playerPrefab = playerPrefab;
             networkManager.autoCreatePlayer = true;
             networkManager.maxConnections = GameConstants.MaximumPlayersPerSession;
-            RegisterSpawnPrefab(networkManager, slimePrefab);
-            RegisterSpawnPrefab(networkManager, skeletonPrefab);
+            foreach (GameObject enemyPrefab in enemyPrefabs)
+            {
+                RegisterSpawnPrefab(networkManager, enemyPrefab);
+            }
+
             RegisterSpawnPrefab(networkManager, spellProjectilePrefab);
 
             SerializedObject serializedSession = new SerializedObject(sessionController);

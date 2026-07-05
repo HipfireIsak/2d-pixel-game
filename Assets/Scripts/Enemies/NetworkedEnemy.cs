@@ -32,7 +32,7 @@ namespace AetherEcho.Enemies
         {
             enemyTypeId = typeId;
             ArtCatalog art = ArtAssetResolver.Catalog;
-            int health = typeId == "skeleton" ? 120 : 80;
+            int health = ResolveBaseHealth(typeId);
             maxHealth = health + level * 10;
             combatantState.CharacterClass = typeId;
             combatantState.Level = level;
@@ -46,21 +46,34 @@ namespace AetherEcho.Enemies
 
             if (billboardVisual != null && art != null)
             {
-                Sprite sprite = typeId == "skeleton" ? art.skeleton : art.slime;
-                float scale = 1.1f;
+                Sprite sprite = art.GetEnemySprite(typeId);
+                float scale = GameConstants.EnemyVisualScale;
                 float groundOffset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
                 billboardVisual.Configure(
                     transform,
                     sprite,
                     directionalHero: false,
                     offset: new Vector3(0f, groundOffset, 0f),
-                    scale: scale);
+                    scale: scale,
+                    facing: SpriteFacingMode.BillboardYWhenMoving);
+            }
+        }
+
+        private static int ResolveBaseHealth(string typeId)
+        {
+            switch (typeId)
+            {
+                case "skeleton": return 120;
+                case "bat": return 70;
+                case "eye": return 95;
+                case "sunflower": return 85;
+                default: return 80;
             }
         }
 
         private void Update()
         {
-            if (!isServer)
+            if (netIdentity == null || !netIdentity.isServer || combatantState == null)
             {
                 return;
             }
@@ -69,6 +82,7 @@ namespace AetherEcho.Enemies
             CombatantState target = ThreatMatrix.GetHighestThreatTarget(combatantState);
             if (target == null)
             {
+                billboardVisual?.SetMoving(false);
                 return;
             }
 
@@ -82,15 +96,16 @@ namespace AetherEcho.Enemies
                     transform.position,
                     step,
                     GameConstants.EnemyCollisionRadius);
-                if (billboardVisual != null)
-                {
-                    billboardVisual.SetMoveDirection(toTarget);
-                }
+                billboardVisual?.SetMoveDirection(toTarget);
             }
-            else if (attackCooldownSeconds <= 0f)
+            else
             {
-                target.TakeDamage(8, DamageType.Physical, combatantState);
-                attackCooldownSeconds = 1.4f;
+                billboardVisual?.SetMoving(false);
+                if (attackCooldownSeconds <= 0f)
+                {
+                    target.TakeDamage(8, DamageType.Physical, combatantState);
+                    attackCooldownSeconds = 1.4f;
+                }
             }
         }
 

@@ -25,6 +25,8 @@ namespace AetherEcho.Rendering
         public Sprite floorRed;
         public Sprite floorDirt;
         public Sprite floorFlash;
+        public Sprite carpetA;
+        public Sprite carpetB;
         public Sprite tree;
         public Sprite rock;
         public Sprite[] propsGrass;
@@ -39,6 +41,15 @@ namespace AetherEcho.Rendering
         public Sprite[] decorWild;
         public Sprite[] decorRuin;
         public Sprite[] decorHub;
+        public Sprite[] medievalFloors;
+        public Sprite[] medievalProps;
+        public Sprite[] jungleGrass;
+        public Sprite[] jungleTrees;
+        public Sprite[] jungleRocks;
+        public Sprite[] jungleVegetation;
+        public Sprite[] handcraftedMoss;
+        public Sprite[] gameItemDecor;
+        public Sprite[] hillsBackdrop;
         public Sprite spellBeam;
         public Sprite spellBurst;
         public Sprite spellPulse;
@@ -56,6 +67,50 @@ namespace AetherEcho.Rendering
                 case "sunflower": return sunflower;
                 default: return slime;
             }
+        }
+
+        public static Sprite[] MergeSprites(params Sprite[][] groups)
+        {
+            int count = 0;
+            foreach (Sprite[] group in groups)
+            {
+                if (group != null)
+                {
+                    count += group.Length;
+                }
+            }
+
+            if (count == 0)
+            {
+                return System.Array.Empty<Sprite>();
+            }
+
+            var merged = new Sprite[count];
+            int index = 0;
+            foreach (Sprite[] group in groups)
+            {
+                if (group == null)
+                {
+                    continue;
+                }
+
+                foreach (Sprite sprite in group)
+                {
+                    if (sprite != null)
+                    {
+                        merged[index++] = sprite;
+                    }
+                }
+            }
+
+            if (index == merged.Length)
+            {
+                return merged;
+            }
+
+            var trimmed = new Sprite[index];
+            System.Array.Copy(merged, trimmed, index);
+            return trimmed;
         }
     }
 

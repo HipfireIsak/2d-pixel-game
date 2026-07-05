@@ -18,7 +18,7 @@ namespace AetherEcho.Enemies
 
         private void Update()
         {
-            if (!isServer || deathHandled || combatantState == null)
+            if (netIdentity == null || !netIdentity.isServer || deathHandled || combatantState == null)
             {
                 return;
             }

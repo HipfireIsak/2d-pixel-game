@@ -11,7 +11,8 @@ namespace AetherEcho.Core
 
         public const float PlayerMoveSpeedMetersPerSecond = 6.5f;
         public const float PlayerSprintMultiplier = 1.4f;
-        public const float PlayerVisualScale = 1.1f;
+        public const float PlayerVisualScale = 1.35f;
+        public const float EnemyVisualScale = 1.25f;
 
         public const float BaseManaRegenPerSecond = 3.5f;
         public const float ManaRegenPerIntelligence = 0.15f;
@@ -20,7 +21,7 @@ namespace AetherEcho.Core
         public const float CameraYawDegrees = 0f;
         public const float CameraHeightMeters = 22f;
         public const float CameraBackOffsetMeters = 22f;
-        public const float CameraOrthographicSize = 18f;
+        public const float CameraOrthographicSize = 12f;
         public const float CameraFollowSmoothTime = 0.1f;
 
         public const string DataSpellsFileName = "spells.json";
@@ -37,7 +38,8 @@ namespace AetherEcho.Core
         public const int ObstacleLayerIndex = 8;
 
         public const float GroundHeight = 0f;
-        public const float FloorVisualHeight = 0.02f;
+        public const float FloorVisualHeight = 0f;
+        public const float EntityVisualLift = 0.08f;
 
         public const int BiomeGridSize = 3;
         public const float ChunkHalfExtentMeters = 80f;
@@ -51,8 +53,9 @@ namespace AetherEcho.Core
         public const float EnemyCollisionRadius = 0.38f;
         public const float SpellProjectileSpeedMetersPerSecond = 18f;
 
-        public const int GroundSortingOrder = -10000;
-        public const int EntitySortingBaseOffset = 1000;
-        public const int SortingOrderPerMeter = 100;
+        public const int GroundSortingOrder = 0;
+        public const int GroundSortingOrderPerMeter = 12;
+        public const int EntitySortingBaseOffset = 10000;
+        public const int SortingOrderPerMeter = 12;
     }
 }

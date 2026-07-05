@@ -70,6 +70,11 @@ namespace AetherEcho.Combat
 
         public static CombatantState GetHighestThreatTarget(CombatantState aggroOwner)
         {
+            if (aggroOwner == null)
+            {
+                return null;
+            }
+
             if (!samplesByTarget.TryGetValue(aggroOwner, out List<ThreatSample> samples))
             {
                 return null;

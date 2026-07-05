@@ -61,6 +61,7 @@ namespace AetherEcho.Player
         public override void OnStartServer()
         {
             ApplyDefaultClassStats(GameConstants.DefaultPlayerClass, GameConstants.DefaultPlayerLevel);
+            Quests.QuestManager.Instance?.PushQuestUiToPlayer(this);
         }
 
         public override void OnStartLocalPlayer()
@@ -69,7 +70,9 @@ namespace AetherEcho.Player
             EnsureVisual();
             transform.position = FlatMovementUtility.SnapToGround(transform.position);
             GameplayHud.Instance?.BindLocalPlayer(this);
+            MinimapUI.Instance?.BindLocalPlayer(this);
             SpellGroundTargeting.Instance?.BindLocalPlayer(this, movementController);
+            CmdRequestQuestSync();
         }
 
         public override void OnStartClient()
@@ -87,14 +90,15 @@ namespace AetherEcho.Player
             ArtCatalog art = ArtAssetResolver.Catalog;
             if (art != null)
             {
-                float scale = 1.1f;
+                float scale = GameConstants.PlayerVisualScale;
                 float offset = FlatMovementUtility.GetSpriteGroundOffset(art.heroSouth, scale);
                 billboardVisual.Configure(
                     transform,
                     art.heroSouth,
                     directionalHero: true,
                     offset: new Vector3(0f, offset, 0f),
-                    scale: scale);
+                    scale: scale,
+                    facing: SpriteFacingMode.BillboardY);
             }
         }
 
@@ -126,6 +130,37 @@ namespace AetherEcho.Player
             displayName = string.IsNullOrWhiteSpace(requestedName)
                 ? "Adventurer"
                 : requestedName.Substring(0, Mathf.Min(24, requestedName.Length));
+        }
+
+        [Command]
+        public void CmdInteractWithQuestNpc()
+        {
+            if (Quests.QuestManager.Instance == null)
+            {
+                TargetShowToast(connectionToClient, "Quest system unavailable.");
+                return;
+            }
+
+            if (Quests.QuestManager.Instance.TryGetActiveProgress(netId, out Quests.QuestProgress progress))
+            {
+                if (progress.objectivesComplete)
+                {
+                    TargetOpenQuestTurnIn(connectionToClient, progress.questId);
+                    return;
+                }
+
+                TargetShowToast(connectionToClient, "Finish your current objectives first. Press J for the quest log.");
+                return;
+            }
+
+            string questId = Quests.QuestManager.Instance.GetSuggestedQuestId(netId);
+            if (Quests.QuestManager.Instance.IsQuestCompleted(netId, questId))
+            {
+                TargetShowToast(connectionToClient, "You have completed all starter quests from the Chrono Sage.");
+                return;
+            }
+
+            TargetOpenQuestDialog(connectionToClient, questId);
         }
 
         [Command]
@@ -165,10 +200,40 @@ namespace AetherEcho.Player
             }
         }
 
+        [TargetRpc]
+        private void TargetOpenQuestTurnIn(NetworkConnectionToClient target, string questId)
+        {
+            QuestDialogUI.Instance?.ShowQuestTurnIn(this, questId);
+        }
+
+        [Command]
+        public void CmdTurnInQuest()
+        {
+            if (Quests.QuestManager.Instance == null)
+            {
+                return;
+            }
+
+            if (Quests.QuestManager.Instance.ServerTryTurnInQuest(this, out string message))
+            {
+                TargetShowToast(connectionToClient, message);
+            }
+            else
+            {
+                TargetShowToast(connectionToClient, message);
+            }
+        }
+
+        [Command]
+        private void CmdRequestQuestSync()
+        {
+            Quests.QuestManager.Instance?.PushQuestUiToPlayer(this);
+        }
+
         [Command]
         public void CmdTalkToQuestNpc(string questId)
         {
-            CmdOpenQuestDialog(questId);
+            CmdInteractWithQuestNpc();
         }
 
         [TargetRpc]
@@ -217,6 +282,12 @@ namespace AetherEcho.Player
         public void RpcUpdateQuestHud(string hudText)
         {
             GameplayHud.Instance?.SetQuestText(hudText);
+        }
+
+        [ClientRpc]
+        public void RpcUpdateQuestTracker(string trackerText, bool readyToTurnIn)
+        {
+            GameplayHud.Instance?.SetQuestTracker(trackerText, readyToTurnIn);
         }
 
         public bool TryLocalCast(string spellId, Vector3 targetPoint, Vector3 aimDirection, out string failureReason)

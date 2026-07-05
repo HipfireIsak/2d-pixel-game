@@ -105,6 +105,8 @@ MonoBehaviour:
   Strength: 10
   Intelligence: 10
   Agility: 10
+  Experience: 0
+  Gold: 0
 --- !u!114 &5039349022995435742
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -152,10 +154,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spriteRenderer: {fileID: 1652269819072047919}
-  localOffset: {x: 0, y: 0.61875004, z: 0}
-  spriteScale: 1.1
+  localOffset: {x: 0, y: 0.839375, z: 0}
+  spriteScale: 1.35
   useDirectionalHeroSprites: 1
   fixedSprite: {fileID: -1725898018, guid: b011d091d38ab2f499a1a067bd29d471, type: 3}
+  facingMode: 1
 --- !u!1 &4851595596768751849
 GameObject:
   m_ObjectHideFlags: 0
@@ -274,8 +277,8 @@ Transform:
   m_GameObject: {fileID: 5255177359998047945}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.61875004, z: 0}
-  m_LocalScale: {x: 1.1, y: 1.1, z: 1.1}
+  m_LocalPosition: {x: 0, y: 0.839375, z: 0}
+  m_LocalScale: {x: 1.35, y: 1.35, z: 1.35}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5230290670683011151}
@@ -320,7 +323,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 100
+  m_SortingOrder: 10000
   m_Sprite: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

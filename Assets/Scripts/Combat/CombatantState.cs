@@ -55,7 +55,7 @@ namespace AetherEcho.Combat
 
         private void Update()
         {
-            if (!isServer)
+            if (netIdentity == null || !netIdentity.isServer)
             {
                 return;
             }

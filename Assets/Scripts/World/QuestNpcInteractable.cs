@@ -7,7 +7,6 @@ namespace AetherEcho.World
 {
     public class QuestNpcInteractable : MonoBehaviour
     {
-        [SerializeField] private string questId = "quest_fractured_slimes";
         [SerializeField] private float interactRadiusMeters = 2.8f;
 
         private void Update()
@@ -33,7 +32,7 @@ namespace AetherEcho.World
                 return;
             }
 
-            localPlayer.CmdOpenQuestDialog(questId);
+            localPlayer.CmdInteractWithQuestNpc();
         }
 
         private static NetworkedCombatant FindLocalPlayer()
