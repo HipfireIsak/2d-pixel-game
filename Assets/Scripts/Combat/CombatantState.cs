@@ -34,6 +34,10 @@ namespace AetherEcho.Combat
         [SyncVar] public int Strength = 10;
         [SyncVar] public int Intelligence = 10;
         [SyncVar] public int Agility = 10;
+        [SyncVar] public int Experience;
+        [SyncVar] public int Gold;
+
+        public int ExperienceToNextLevel => Mathf.Max(1, Level * GameConstants.ExperiencePerLevel);
 
         private readonly Dictionary<string, float> cooldownEndTimes = new Dictionary<string, float>();
         private readonly Dictionary<string, float> activeStatusEffects = new Dictionary<string, float>();
@@ -164,6 +168,26 @@ namespace AetherEcho.Combat
         {
             activeStatusEffects[effectId] = Time.time + durationSeconds;
             Debug.Log("[CombatantState] Applied " + effectId + " to " + name + " for " + durationSeconds + "s.");
+        }
+
+        [Server]
+        public void ServerGrantExperience(int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            Experience += amount;
+            while (Experience >= ExperienceToNextLevel)
+            {
+                Experience -= ExperienceToNextLevel;
+                Level++;
+                MaxHealth += 8;
+                MaxMana += 10;
+                CurrentHealth = MaxHealth;
+                CurrentMana = MaxMana;
+            }
         }
 
         [Server]

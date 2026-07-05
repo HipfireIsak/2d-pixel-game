@@ -22,7 +22,7 @@ namespace AetherEcho.World
 
             var groundRoot = new GameObject("GroundField");
             groundRoot.transform.SetParent(parent, false);
-            groundRoot.transform.position = Vector3.zero;
+            groundRoot.transform.localPosition = Vector3.zero;
 
             Vector2 tileSize = tileA.bounds.size;
             float tileWidth = tileSize.x;
@@ -39,7 +39,7 @@ namespace AetherEcho.World
                     var tile = new GameObject($"Floor_{x}_{z}");
                     tile.transform.SetParent(groundRoot.transform, false);
                     tile.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-                    tile.transform.position = new Vector3(
+                    tile.transform.localPosition = new Vector3(
                         startX + (x * tileWidth),
                         GameConstants.FloorVisualHeight,
                         startZ + (z * tileDepth));
@@ -64,6 +64,38 @@ namespace AetherEcho.World
             return nativeHeight > 0.001f ? targetHeightMeters / nativeHeight : 1f;
         }
 
+        public static GameObject CreateFixedProp(
+            Transform parent,
+            string name,
+            Sprite sprite,
+            Vector3 position,
+            float scale,
+            bool isTree)
+        {
+            var prop = new GameObject(name);
+            if (parent != null)
+            {
+                prop.transform.SetParent(parent, false);
+            }
+
+            prop.transform.position = FlatMovementUtility.SnapToGround(position);
+            prop.transform.rotation = Quaternion.identity;
+
+            var visual = prop.AddComponent<PixelBillboardVisual>();
+            float groundOffset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
+            visual.Configure(
+                prop.transform,
+                sprite,
+                directionalHero: false,
+                offset: new Vector3(0f, groundOffset, 0f),
+                scale: scale,
+                facing: SpriteFacingMode.FixedSouth);
+
+            AddFlatObstacleCollider(prop, sprite, scale, isTree);
+            ApplyDepthSorting(visual.SpriteRenderer, prop.transform.position);
+            return prop;
+        }
+
         public static GameObject CreateBillboardProp(
             Transform parent,
             string name,
@@ -71,7 +103,8 @@ namespace AetherEcho.World
             Vector3 position,
             float scale,
             bool addObstacleCollider,
-            bool isTree)
+            bool isTree,
+            SpriteFacingMode facingMode = SpriteFacingMode.BillboardYWhenMoving)
         {
             var prop = new GameObject(name);
             if (parent != null)
@@ -88,7 +121,8 @@ namespace AetherEcho.World
                 sprite,
                 directionalHero: false,
                 offset: new Vector3(0f, groundOffset, 0f),
-                scale: scale);
+                scale: scale,
+                facing: facingMode);
 
             if (addObstacleCollider && sprite != null)
             {
@@ -96,7 +130,6 @@ namespace AetherEcho.World
             }
 
             ApplyDepthSorting(visual.SpriteRenderer, prop.transform.position);
-
             return prop;
         }
 
@@ -110,6 +143,7 @@ namespace AetherEcho.World
             var prop = new GameObject(name);
             prop.transform.SetParent(parent, false);
             prop.transform.position = FlatMovementUtility.SnapToGround(position);
+            prop.transform.rotation = Quaternion.identity;
 
             var visual = prop.AddComponent<PixelBillboardVisual>();
             float groundOffset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
@@ -118,7 +152,8 @@ namespace AetherEcho.World
                 sprite,
                 directionalHero: false,
                 offset: new Vector3(0f, groundOffset, 0f),
-                scale: scale);
+                scale: scale,
+                facing: SpriteFacingMode.FixedSouth);
             ApplyDepthSorting(visual.SpriteRenderer, prop.transform.position);
             return prop;
         }
@@ -139,12 +174,14 @@ namespace AetherEcho.World
         {
             prop.layer = GameConstants.ObstacleLayerIndex;
             Vector2 spriteSize = sprite.bounds.size;
+            float width = spriteSize.x * scale;
+            float depth = Mathf.Max(spriteSize.x, spriteSize.y) * scale * 0.55f;
 
             if (isTree)
             {
                 var capsule = prop.AddComponent<CapsuleCollider>();
-                float trunkRadius = Mathf.Max(0.42f, spriteSize.x * scale * 0.13f);
-                float trunkHeight = Mathf.Max(0.55f, spriteSize.y * scale * 0.28f);
+                float trunkRadius = Mathf.Clamp(width * 0.16f, 0.28f, 0.55f);
+                float trunkHeight = Mathf.Clamp(spriteSize.y * scale * 0.22f, 0.45f, 1.1f);
                 capsule.radius = trunkRadius;
                 capsule.height = trunkHeight;
                 capsule.direction = 1;
@@ -153,9 +190,10 @@ namespace AetherEcho.World
             }
 
             var box = prop.AddComponent<BoxCollider>();
-            float width = Mathf.Max(0.45f, spriteSize.x * scale * 0.42f);
-            float depth = Mathf.Max(0.4f, spriteSize.x * scale * 0.36f);
-            box.size = new Vector3(width, GameConstants.FlatColliderHeight, depth);
+            box.size = new Vector3(
+                Mathf.Clamp(width * 0.55f, 0.35f, 1.2f),
+                GameConstants.FlatColliderHeight,
+                Mathf.Clamp(depth * 0.55f, 0.35f, 1.0f));
             box.center = new Vector3(0f, GameConstants.FlatColliderHeight * 0.5f, 0f);
         }
 

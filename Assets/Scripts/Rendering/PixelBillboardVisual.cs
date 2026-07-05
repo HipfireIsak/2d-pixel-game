@@ -10,17 +10,30 @@ namespace AetherEcho.Rendering
         [SerializeField] private float spriteScale = 1.6f;
         [SerializeField] private bool useDirectionalHeroSprites = true;
         [SerializeField] private Sprite fixedSprite;
+        [SerializeField] private SpriteFacingMode facingMode = SpriteFacingMode.BillboardY;
 
         private Transform trackedTransform;
         private Vector3 lastMoveDirection = Vector3.back;
+        private bool isMoving;
 
         public SpriteRenderer SpriteRenderer => spriteRenderer;
 
-        public void Configure(Transform owner, Sprite sprite, bool directionalHero = false, Vector3? offset = null, float? scale = null)
+        public void Configure(
+            Transform owner,
+            Sprite sprite,
+            bool directionalHero = false,
+            Vector3? offset = null,
+            float? scale = null,
+            SpriteFacingMode? facing = null)
         {
             trackedTransform = owner != null ? owner : transform;
             fixedSprite = sprite;
             useDirectionalHeroSprites = directionalHero;
+            if (facing.HasValue)
+            {
+                facingMode = facing.Value;
+            }
+
             if (offset.HasValue)
             {
                 localOffset = offset.Value;
@@ -45,7 +58,17 @@ namespace AetherEcho.Rendering
             if (direction.sqrMagnitude > 0.01f)
             {
                 lastMoveDirection = direction;
+                isMoving = true;
             }
+            else
+            {
+                isMoving = false;
+            }
+        }
+
+        public void SetMoving(bool moving)
+        {
+            isMoving = moving;
         }
 
         private void Awake()
@@ -75,7 +98,7 @@ namespace AetherEcho.Rendering
                 return;
             }
 
-            CameraBillboard.Apply(spriteRenderer.transform);
+            ApplyFacing();
 
             if (useDirectionalHeroSprites)
             {
@@ -92,10 +115,30 @@ namespace AetherEcho.Rendering
                 ApplySprite(fixedSprite);
             }
 
-            if (trackedTransform != null && spriteRenderer != null)
+            if (trackedTransform != null)
             {
                 WorldPropBuilder.ApplyDepthSorting(spriteRenderer, trackedTransform.position);
             }
+        }
+
+        private void ApplyFacing()
+        {
+            switch (facingMode)
+            {
+                case SpriteFacingMode.FixedSouth:
+                    spriteRenderer.transform.localRotation = Quaternion.identity;
+                    return;
+                case SpriteFacingMode.BillboardYWhenMoving:
+                    if (!isMoving)
+                    {
+                        spriteRenderer.transform.localRotation = Quaternion.identity;
+                        return;
+                    }
+
+                    break;
+            }
+
+            CameraBillboard.Apply(spriteRenderer.transform, lockYAxis: true);
         }
 
         private void ApplyGroundAnchor(Sprite sprite)

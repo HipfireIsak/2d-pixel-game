@@ -2,7 +2,8 @@
     "name": "Mirror.Components",
     "rootNamespace": "",
     "references": [
-        "GUID:30817c1a0e6d646d99c048fc403f5979"
+        "GUID:30817c1a0e6d646d99c048fc403f5979",
+        "GUID:6055be8ebefd69e48b49212b09faa26b"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -92,7 +92,7 @@ namespace AetherEcho.Combat
         {
             if (visualRenderer != null)
             {
-                CameraBillboard.Apply(visualRenderer.transform);
+                CameraBillboard.Apply(visualRenderer.transform, lockYAxis: true);
             }
         }
 

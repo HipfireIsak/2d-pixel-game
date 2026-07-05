@@ -142,7 +142,7 @@ namespace AetherEcho.Vfx
                     renderer.color = color;
                 }
 
-                CameraBillboard.Apply(transform);
+                CameraBillboard.Apply(transform, lockYAxis: true);
                 yield return null;
             }
 

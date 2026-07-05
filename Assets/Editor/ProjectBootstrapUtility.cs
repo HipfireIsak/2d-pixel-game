@@ -71,48 +71,36 @@ namespace AetherEcho.EditorTools
             catalog.heroEast = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Hero.png", "Hero_8");
             catalog.slime = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Slime");
             catalog.skeleton = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Skeletone");
+            catalog.bat = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Bat");
+            catalog.rat = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Rat");
+            catalog.snake = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Snake");
+            catalog.eye = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Eye");
+            catalog.sunflower = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Sunflower");
             catalog.questNpc = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Char_Trader");
             catalog.floorA = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_A");
             catalog.floorB = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_B");
-            catalog.floorGrass = LoadSprite("Assets/Skipan's Jungle Sprites/Grass/Grass_02.png");
-            catalog.tree = LoadSprite("Assets/Skipan's Jungle Sprites/Trees/Tree_01.png");
-            catalog.rock = LoadSprite("Assets/Skipan's Jungle Sprites/Rocks/Rock_02.png");
-            catalog.trees = new[]
-            {
-                LoadSprite("Assets/Skipan's Jungle Sprites/Trees/Tree_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Trees/Tree_02.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Trees/Tree_03.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Trees/Twigs_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Trees/Twigs_02.png")
-            };
-            catalog.rocks = new[]
-            {
-                LoadSprite("Assets/Skipan's Jungle Sprites/Rocks/Rock_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Rocks/Rock_02.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Rocks/Rock_03.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Rocks/RockGroup_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Rocks/RockGroup_02.png")
-            };
-            catalog.bushes = new[]
-            {
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Bush_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Moss_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Moss_02.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Moss_03.png")
-            };
-            catalog.mushrooms = new[]
-            {
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Mushroom_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Mushroom_02.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Mushroom_03.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Doublemushroom.png")
-            };
-            catalog.reeds = new[]
-            {
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/Reed_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/ReedGroup_01.png"),
-                LoadSprite("Assets/Skipan's Jungle Sprites/Vegetation/ReedGroup_02.png")
-            };
+            catalog.floorC = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_C");
+            catalog.floorD = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_D");
+            catalog.floorWood = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Wood");
+            catalog.floorMetal = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Metal");
+            catalog.floorRed = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Red");
+            catalog.floorDirt = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Dirt");
+            catalog.floorFlash = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Floor_Flash");
+            catalog.tree = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Prop_TreeA");
+            catalog.rock = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png", "Prop_Skull");
+            const string atlas = "Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png";
+            catalog.propsGrass = LoadSprites(atlas, "Prop_GrassA", "Prop_GrassB", "Prop_TreeA", "Prop_Shrooms");
+            catalog.propsForest = LoadSprites(atlas, "Prop_TreeA", "Prop_TreeB", "Prop_TreeC", "Prop_Root_A", "Prop_Root_B");
+            catalog.propsRock = LoadSprites(atlas, "Prop_Skull", "Prop_Bone", "Prop_Dirt", "Prop_Vase_A", "Prop_Vase_B");
+            catalog.propsWild = LoadSprites(atlas, "Prop_Root_C", "Prop_Root_D", "Prop_Web", "Prop_Bone", "Prop_Dirt");
+            catalog.propsRuin = LoadSprites(atlas, "Prop_Chain_A", "Prop_Chain_B", "Prop_Pipe_a", "Prop_Candles", "Prop_Vase_C");
+            catalog.propsHub = LoadSprites(atlas, "Prop_GrassA", "Prop_Candles", "Prop_Vase_D");
+            catalog.decorGrass = LoadSprites(atlas, "Prop_GrassA", "Prop_GrassB", "Prop_Green", "Prop_SA");
+            catalog.decorForest = LoadSprites(atlas, "Prop_SB", "Prop_SC", "Prop_Root_E", "Prop_Root_F");
+            catalog.decorRock = LoadSprites(atlas, "Prop_Bone", "Prop_Skull", "Prop_Dirt");
+            catalog.decorWild = LoadSprites(atlas, "Prop_Shrooms", "Prop_Web", "Prop_Hand");
+            catalog.decorRuin = LoadSprites(atlas, "Prop_Pipe_B", "Prop_Pipe_C", "Prop_Env_A", "Prop_Env_B");
+            catalog.decorHub = LoadSprites(atlas, "Prop_GrassB", "Prop_Candles");
             catalog.spellBeam = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_5");
             catalog.spellBurst = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_10");
             catalog.spellPulse = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_0");
@@ -138,6 +126,17 @@ namespace AetherEcho.EditorTools
             return AssetDatabase.LoadAssetAtPath<Sprite>(texturePath);
         }
 
+        private static Sprite[] LoadSprites(string texturePath, params string[] spriteNames)
+        {
+            var sprites = new Sprite[spriteNames.Length];
+            for (int i = 0; i < spriteNames.Length; i++)
+            {
+                sprites[i] = LoadSprite(texturePath, spriteNames[i]);
+            }
+
+            return sprites;
+        }
+
         private static GameObject CreatePlayerPrefab(ArtCatalog artCatalog)
         {
             var playerRoot = new GameObject("PlayerAvatar");
@@ -155,7 +154,8 @@ namespace AetherEcho.EditorTools
                 artCatalog.heroSouth,
                 directionalHero: true,
                 offset: new Vector3(0f, heroOffset, 0f),
-                scale: heroScale);
+                scale: heroScale,
+                facing: SpriteFacingMode.BillboardY);
 
             var cameraObject = new GameObject("PlayerCamera");
             cameraObject.transform.SetParent(playerRoot.transform, false);
@@ -188,7 +188,8 @@ namespace AetherEcho.EditorTools
                 sprite,
                 directionalHero: false,
                 offset: new Vector3(0f, offset, 0f),
-                scale: scale);
+                scale: scale,
+                facing: SpriteFacingMode.BillboardYWhenMoving);
 
             return SavePrefab(enemyRoot, path);
         }

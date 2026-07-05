@@ -24,7 +24,6 @@ namespace AetherEcho.World
             hasBuiltWorld = true;
             DestroyLegacyWorldObjects();
             BuildEnvironment();
-            SpawnEnemies();
             SpawnQuestNpc();
         }
 
@@ -47,128 +46,13 @@ namespace AetherEcho.World
         {
             ArtCatalog art = ArtAssetResolver.Catalog;
             var worldRoot = new GameObject("WorldContent");
-
-            if (art != null && art.floorA != null)
-            {
-                float extent = GameConstants.WorldHalfExtentMeters * 2f;
-                WorldPropBuilder.CreateSeamlessFloorGrid(
-                    worldRoot.transform,
-                    art.floorA,
-                    art.floorB,
-                    extent,
-                    extent);
-            }
-
-            ScatterEnvironmentProps(worldRoot.transform, art);
+            WorldBiomeBuilder.BuildChunkGrid(worldRoot.transform, art, WorldSeed);
             CreateDirectionalLightIfMissing();
         }
 
-        private static void ScatterEnvironmentProps(Transform parent, ArtCatalog art)
+        public static void SpawnEnemyPublic(string typeId, Vector3 position, int level)
         {
-            if (art == null)
-            {
-                return;
-            }
-
-            float playerHeight = art.heroSouth != null
-                ? art.heroSouth.bounds.size.y * GameConstants.PlayerVisualScale
-                : 1.2f;
-            float treeScaleBase = WorldPropBuilder.ComputePropScale(art.tree, playerHeight * GameConstants.TreeHeightMultiplier);
-            float rockScaleBase = WorldPropBuilder.ComputePropScale(art.rock, playerHeight * GameConstants.RockHeightMultiplier);
-
-            Random.InitState(WorldSeed);
-            float extent = GameConstants.WorldHalfExtentMeters - 2f;
-
-            ScatterProps(parent, GetSpriteArray(art.trees, art.tree), GameConstants.ProceduralTreeCount, extent, treeScaleBase, 0.85f, 1.1f, true);
-            ScatterProps(parent, GetSpriteArray(art.rocks, art.rock), GameConstants.ProceduralRockCount, extent, rockScaleBase, 0.75f, 1.15f, false);
-            ScatterDecor(parent, art.bushes, GameConstants.ProceduralBushCount, extent, playerHeight * 0.35f, 0.8f, 1.2f, "Bush");
-            ScatterDecor(parent, art.mushrooms, GameConstants.ProceduralMushroomCount, extent, playerHeight * 0.18f, 0.85f, 1.15f, "Mushroom");
-            ScatterDecor(parent, art.reeds, 35, extent, playerHeight * 0.55f, 0.9f, 1.1f, "Reed");
-        }
-
-        private static Sprite[] GetSpriteArray(Sprite[] sprites, Sprite fallback)
-        {
-            if (sprites != null && sprites.Length > 0)
-            {
-                return sprites;
-            }
-
-            return fallback != null ? new[] { fallback } : System.Array.Empty<Sprite>();
-        }
-
-        private static void ScatterProps(
-            Transform parent,
-            Sprite[] sprites,
-            int count,
-            float extent,
-            float baseScale,
-            float minScaleMultiplier,
-            float maxScaleMultiplier,
-            bool isTree)
-        {
-            if (sprites == null || sprites.Length == 0)
-            {
-                return;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                Vector3 position = RandomGroundPoint(extent);
-                Sprite sprite = sprites[Random.Range(0, sprites.Length)];
-                float targetHeight = (sprite.bounds.size.y * baseScale) * Random.Range(minScaleMultiplier, maxScaleMultiplier);
-                float scale = WorldPropBuilder.ComputePropScale(sprite, targetHeight);
-                WorldPropBuilder.CreateBillboardProp(
-                    parent,
-                    (isTree ? "Tree_" : "Rock_") + i,
-                    sprite,
-                    position,
-                    scale,
-                    addObstacleCollider: true,
-                    isTree: isTree);
-            }
-        }
-
-        private static void ScatterDecor(
-            Transform parent,
-            Sprite[] sprites,
-            int count,
-            float extent,
-            float targetHeight,
-            float minScaleMultiplier,
-            float maxScaleMultiplier,
-            string prefix)
-        {
-            if (sprites == null || sprites.Length == 0)
-            {
-                return;
-            }
-
-            for (int i = 0; i < count; i++)
-            {
-                Vector3 position = RandomGroundPoint(extent);
-                Sprite sprite = sprites[Random.Range(0, sprites.Length)];
-                float scale = WorldPropBuilder.ComputePropScale(sprite, targetHeight * Random.Range(minScaleMultiplier, maxScaleMultiplier));
-                WorldPropBuilder.CreateDecorProp(parent, prefix + "_" + i, sprite, position, scale);
-            }
-        }
-
-        private static Vector3 RandomGroundPoint(float extent)
-        {
-            for (int attempt = 0; attempt < 12; attempt++)
-            {
-                float x = Random.Range(-extent, extent);
-                float z = Random.Range(-extent, extent);
-                if (new Vector2(x, z).magnitude < GameConstants.SpawnSafeRadiusMeters)
-                {
-                    continue;
-                }
-
-                return new Vector3(x, GameConstants.GroundHeight, z);
-            }
-
-            float angle = Random.Range(0f, Mathf.PI * 2f);
-            float radius = Random.Range(GameConstants.SpawnSafeRadiusMeters + 2f, extent);
-            return new Vector3(Mathf.Cos(angle) * radius, GameConstants.GroundHeight, Mathf.Sin(angle) * radius);
+            SpawnEnemy(typeId, position, level);
         }
 
         private static void CreateDirectionalLightIfMissing()
@@ -193,19 +77,6 @@ namespace AetherEcho.World
             lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
         }
 
-        private void SpawnEnemies()
-        {
-            Random.InitState(WorldSeed + 17);
-            float extent = GameConstants.WorldHalfExtentMeters - 6f;
-
-            for (int i = 0; i < 28; i++)
-            {
-                Vector3 position = RandomGroundPoint(extent * 0.85f);
-                string typeId = Random.value > 0.45f ? "slime" : "skeleton";
-                SpawnEnemy(typeId, position, 2 + (i % 4));
-            }
-        }
-
         private void SpawnQuestNpc()
         {
             ArtCatalog art = ArtAssetResolver.Catalog;
@@ -220,7 +91,8 @@ namespace AetherEcho.World
                 new Vector3(-2f, 0f, -2f),
                 npcScale,
                 addObstacleCollider: false,
-                isTree: false);
+                isTree: false,
+                facingMode: SpriteFacingMode.BillboardY);
             npc.AddComponent<QuestNpcInteractable>();
             SphereCollider collider = npc.AddComponent<SphereCollider>();
             collider.radius = 0.9f;

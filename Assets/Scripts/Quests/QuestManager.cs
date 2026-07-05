@@ -13,15 +13,22 @@ namespace AetherEcho.Quests
     {
         public string questId;
         public int currentCount;
-        public bool isCompleted;
+        public bool objectivesComplete;
     }
 
     public class QuestManager : MonoBehaviour
     {
         public static QuestManager Instance { get; private set; }
 
+        public static readonly string[] StarterQuestIds =
+        {
+            "quest_fractured_slimes",
+            "quest_bone_echoes"
+        };
+
         private readonly Dictionary<string, QuestDefinition> questDatabase = new Dictionary<string, QuestDefinition>();
         private readonly Dictionary<uint, QuestProgress> activeQuestByPlayerNetId = new Dictionary<uint, QuestProgress>();
+        private readonly Dictionary<uint, HashSet<string>> completedQuestsByPlayer = new Dictionary<uint, HashSet<string>>();
 
         private void Awake()
         {
@@ -48,7 +55,6 @@ namespace AetherEcho.Quests
                 if (quest != null && !string.IsNullOrWhiteSpace(quest.id))
                 {
                     questDatabase[quest.id] = quest;
-                    Debug.Log("[QuestManager] Registered quest: " + quest.title);
                 }
             }
         }
@@ -56,6 +62,38 @@ namespace AetherEcho.Quests
         public bool TryGetQuest(string questId, out QuestDefinition quest)
         {
             return questDatabase.TryGetValue(questId, out quest);
+        }
+
+        public bool IsQuestCompleted(uint playerNetId, string questId)
+        {
+            return completedQuestsByPlayer.TryGetValue(playerNetId, out HashSet<string> completed)
+                   && completed.Contains(questId);
+        }
+
+        public bool TryGetActiveProgress(uint playerNetId, out QuestProgress progress)
+        {
+            return activeQuestByPlayerNetId.TryGetValue(playerNetId, out progress);
+        }
+
+        public string GetSuggestedQuestId(uint playerNetId)
+        {
+            foreach (string questId in StarterQuestIds)
+            {
+                if (IsQuestCompleted(playerNetId, questId))
+                {
+                    continue;
+                }
+
+                if (activeQuestByPlayerNetId.TryGetValue(playerNetId, out QuestProgress active)
+                    && active.questId == questId)
+                {
+                    continue;
+                }
+
+                return questId;
+            }
+
+            return StarterQuestIds[0];
         }
 
         public bool ServerTryAcceptQuest(NetworkedCombatant player, string questId, out string message)
@@ -68,9 +106,21 @@ namespace AetherEcho.Quests
             }
 
             uint netId = player.netId;
-            if (activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress existing) && !existing.isCompleted)
+            if (IsQuestCompleted(netId, questId))
             {
-                message = "You already have an active quest.";
+                message = "You already completed this quest.";
+                return false;
+            }
+
+            if (activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress existing))
+            {
+                if (!existing.objectivesComplete)
+                {
+                    message = "Finish or turn in your current quest first.";
+                    return false;
+                }
+
+                message = "Return to the Chrono Sage to turn in your completed quest.";
                 return false;
             }
 
@@ -78,11 +128,50 @@ namespace AetherEcho.Quests
             {
                 questId = questId,
                 currentCount = 0,
-                isCompleted = false
+                objectivesComplete = false
             };
 
-            PushHudToPlayer(player, BuildHudText(player.netId));
+            PushQuestUiToPlayer(player);
             message = "Quest accepted: " + quest.title;
+            return true;
+        }
+
+        public bool ServerTryTurnInQuest(NetworkedCombatant player, out string message)
+        {
+            message = string.Empty;
+            if (!NetworkServer.active || player == null)
+            {
+                message = "Cannot turn in quest.";
+                return false;
+            }
+
+            uint netId = player.netId;
+            if (!activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress progress) || !progress.objectivesComplete)
+            {
+                message = "You do not have a completed quest to turn in.";
+                return false;
+            }
+
+            if (!questDatabase.TryGetValue(progress.questId, out QuestDefinition quest))
+            {
+                message = "Quest data missing.";
+                return false;
+            }
+
+            CombatantState combatant = player.CombatantState;
+            combatant.ServerGrantExperience(quest.rewards.experience);
+            combatant.Gold += quest.rewards.gold;
+            activeQuestByPlayerNetId.Remove(netId);
+
+            if (!completedQuestsByPlayer.TryGetValue(netId, out HashSet<string> completed))
+            {
+                completed = new HashSet<string>();
+                completedQuestsByPlayer[netId] = completed;
+            }
+
+            completed.Add(progress.questId);
+            PushQuestUiToPlayer(player);
+            message = "Quest turned in: " + quest.title + " (+" + quest.rewards.experience + " XP, +" + quest.rewards.gold + " gold)";
             return true;
         }
 
@@ -94,7 +183,7 @@ namespace AetherEcho.Quests
             }
 
             uint netId = killer.netIdentity.netId;
-            if (!activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress progress) || progress.isCompleted)
+            if (!activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress progress) || progress.objectivesComplete)
             {
                 return;
             }
@@ -114,24 +203,30 @@ namespace AetherEcho.Quests
                 progress.currentCount++;
                 if (progress.currentCount >= objective.required_count)
                 {
-                    progress.isCompleted = true;
-                    killer.CurrentHealth = Mathf.Min(killer.MaxHealth, killer.CurrentHealth + 25);
-                    killer.CurrentMana = Mathf.Min(killer.MaxMana, killer.CurrentMana + 20);
+                    progress.objectivesComplete = true;
                 }
             }
 
             NetworkedCombatant player = killer.GetComponent<NetworkedCombatant>();
             if (player != null)
             {
-                PushHudToPlayer(player, BuildHudText(player.netId));
+                PushQuestUiToPlayer(player);
             }
+        }
+
+        public void PushQuestUiToPlayer(NetworkedCombatant player)
+        {
+            uint netId = player.netId;
+            activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress progress);
+            player.RpcUpdateQuestHud(BuildHudText(netId));
+            player.RpcUpdateQuestTracker(BuildTrackerText(netId), progress?.objectivesComplete ?? false);
         }
 
         private string BuildHudText(uint playerNetId)
         {
             if (!activeQuestByPlayerNetId.TryGetValue(playerNetId, out QuestProgress progress))
             {
-                return "Speak to the Chrono Sage (E) to begin your trial.";
+                return "Speak to the Chrono Sage (E) at the center hub for quests.";
             }
 
             if (!questDatabase.TryGetValue(progress.questId, out QuestDefinition quest))
@@ -140,19 +235,33 @@ namespace AetherEcho.Quests
             }
 
             QuestObjectiveDefinition objective = quest.objectives.Count > 0 ? quest.objectives[0] : null;
-            if (progress.isCompleted)
+            if (progress.objectivesComplete)
             {
-                return "Quest complete: " + quest.title;
+                return "[Turn In] " + quest.title + " — return to the Chrono Sage (E)";
             }
 
-            return quest.title + "  "
+            return "[Active] " + quest.title + "  "
                    + progress.currentCount + "/" + (objective?.required_count ?? 1)
                    + "  " + (objective?.description ?? quest.description);
         }
 
-        private static void PushHudToPlayer(NetworkedCombatant player, string hudText)
+        private string BuildTrackerText(uint playerNetId)
         {
-            player.RpcUpdateQuestHud(hudText);
+            if (!activeQuestByPlayerNetId.TryGetValue(playerNetId, out QuestProgress progress))
+            {
+                return "No active quest";
+            }
+
+            if (!questDatabase.TryGetValue(progress.questId, out QuestDefinition quest))
+            {
+                return string.Empty;
+            }
+
+            QuestObjectiveDefinition objective = quest.objectives.Count > 0 ? quest.objectives[0] : null;
+            string status = progress.objectivesComplete ? "Complete — turn in at Sage" : "In progress";
+            return quest.title + "\n" + status + "\n"
+                   + (objective?.description ?? quest.description) + " "
+                   + progress.currentCount + "/" + (objective?.required_count ?? 1);
         }
     }
 }

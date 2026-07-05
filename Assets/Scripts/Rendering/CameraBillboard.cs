@@ -4,11 +4,11 @@ using AetherEcho.Player;
 namespace AetherEcho.Rendering
 {
     /// <summary>
-    /// Keeps a transform facing the active gameplay camera (Lost Ark / HD-2D style).
+    /// Keeps sprites upright on the ground while facing the camera (Y-axis billboard).
     /// </summary>
     public class CameraBillboard : MonoBehaviour
     {
-        [SerializeField] private bool yAxisOnly;
+        [SerializeField] private bool yAxisOnly = true;
         [SerializeField] private Transform targetTransform;
 
         private void Awake()

@@ -12,17 +12,15 @@ namespace AetherEcho.Core
         public const float PlayerMoveSpeedMetersPerSecond = 6.5f;
         public const float PlayerSprintMultiplier = 1.4f;
         public const float PlayerVisualScale = 1.1f;
-        public const float TreeHeightMultiplier = 1.45f;
-        public const float RockHeightMultiplier = 0.42f;
+
         public const float BaseManaRegenPerSecond = 3.5f;
         public const float ManaRegenPerIntelligence = 0.15f;
 
-        // Classic 45° top-down: rotation (45, 0, 0), no yaw offset.
         public const float CameraPitchDegrees = 45f;
         public const float CameraYawDegrees = 0f;
         public const float CameraHeightMeters = 22f;
         public const float CameraBackOffsetMeters = 22f;
-        public const float CameraOrthographicSize = 14f;
+        public const float CameraOrthographicSize = 18f;
         public const float CameraFollowSmoothTime = 0.1f;
 
         public const string DataSpellsFileName = "spells.json";
@@ -40,12 +38,13 @@ namespace AetherEcho.Core
 
         public const float GroundHeight = 0f;
         public const float FloorVisualHeight = 0.02f;
-        public const float WorldHalfExtentMeters = 80f;
-        public const int ProceduralTreeCount = 140;
-        public const int ProceduralRockCount = 90;
-        public const int ProceduralBushCount = 70;
-        public const int ProceduralMushroomCount = 45;
+
+        public const int BiomeGridSize = 3;
+        public const float ChunkHalfExtentMeters = 80f;
+        public const float WorldHalfExtentMeters = ChunkHalfExtentMeters * BiomeGridSize;
         public const float SpawnSafeRadiusMeters = 10f;
+
+        public const int ExperiencePerLevel = 100;
 
         public const float FlatColliderHeight = 0.12f;
         public const float PlayerCollisionRadius = 0.32f;
