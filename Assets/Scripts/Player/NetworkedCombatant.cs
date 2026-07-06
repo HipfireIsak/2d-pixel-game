@@ -547,6 +547,23 @@ namespace AetherEcho.Player
             ChatManager.Instance?.ServerReceiveMessage(this, channel, text);
         }
 
+        [Command]
+        public void CmdPickupGroundLoot(uint lootNetId)
+        {
+            if (!NetworkServer.spawned.TryGetValue(lootNetId, out NetworkIdentity identity))
+            {
+                return;
+            }
+
+            GroundLootDrop drop = identity.GetComponent<GroundLootDrop>();
+            if (drop == null)
+            {
+                return;
+            }
+
+            drop.ServerTryPickup(this);
+        }
+
         [TargetRpc]
         public void TargetReceiveChatMessage(NetworkConnectionToClient target, string channel, string senderName, string text)
         {

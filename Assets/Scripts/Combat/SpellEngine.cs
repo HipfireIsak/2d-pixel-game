@@ -5,6 +5,7 @@ using AetherEcho.Content;
 using AetherEcho.Core;
 using AetherEcho.Data;
 using AetherEcho.Player;
+using AetherEcho.World;
 
 namespace AetherEcho.Combat
 {

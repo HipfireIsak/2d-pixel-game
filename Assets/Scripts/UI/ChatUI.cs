@@ -1,4 +1,6 @@
+using Mirror;
 using UnityEngine;
+using AetherEcho.Player;
 using AetherEcho.Social;
 
 namespace AetherEcho.UI
@@ -9,6 +11,8 @@ namespace AetherEcho.UI
         public static bool BlocksGameInput => Instance != null && Instance.chatFocused;
 
         private bool chatFocused;
+        private bool focusInputNextFrame;
+        private bool suppressEnterThisFrame;
         private string chatInput = string.Empty;
         private string activeChannel = "Global";
         private Vector2 scrollPosition;
@@ -22,39 +26,23 @@ namespace AetherEcho.UI
             Instance = this;
         }
 
-        public void RefreshFromManager()
-        {
-        }
-
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+            if (!chatFocused && (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
             {
-                if (!chatFocused)
-                {
-                    chatFocused = true;
-                }
-                else if (!string.IsNullOrWhiteSpace(chatInput))
-                {
-                    SendCurrentInput();
-                    chatFocused = false;
-                }
-                else
-                {
-                    chatFocused = false;
-                }
+                chatFocused = true;
+                focusInputNextFrame = true;
+                suppressEnterThisFrame = true;
             }
+        }
 
-            if (chatFocused && Input.GetKeyDown(KeyCode.Tab))
-            {
-                activeChannel = activeChannel == "Global" ? "Say" : "Global";
-            }
+        private void LateUpdate()
+        {
+            suppressEnterThisFrame = false;
+        }
 
-            if (chatFocused && Input.GetKeyDown(KeyCode.Escape))
-            {
-                chatFocused = false;
-                chatInput = string.Empty;
-            }
+        public void RefreshFromManager()
+        {
         }
 
         private void SendCurrentInput()
@@ -64,13 +52,30 @@ namespace AetherEcho.UI
                 return;
             }
 
-            Player.NetworkedCombatant localPlayer = World.NpcInteractUtility.FindLocalPlayer();
-            localPlayer?.CmdSendChatMessage(activeChannel, chatInput);
+            string text = chatInput.Trim();
+            NetworkedCombatant localPlayer = ResolveLocalPlayer();
+            localPlayer?.CmdSendChatMessage(activeChannel, text);
             chatInput = string.Empty;
+        }
+
+        private static NetworkedCombatant ResolveLocalPlayer()
+        {
+            if (NetworkClient.active && NetworkClient.localPlayer != null)
+            {
+                return NetworkClient.localPlayer.GetComponent<NetworkedCombatant>();
+            }
+
+            return World.NpcInteractUtility.FindLocalPlayer();
         }
 
         private void OnGUI()
         {
+            bool hasMessages = ChatManager.Instance != null && ChatManager.Instance.Messages.Count > 0;
+            if (!chatFocused && !hasMessages)
+            {
+                return;
+            }
+
             EnsureStyles();
             DrawChatPanel();
         }
@@ -78,14 +83,16 @@ namespace AetherEcho.UI
         private void DrawChatPanel()
         {
             float width = 420f;
-            float height = 160f;
+            float inputAreaHeight = chatFocused ? 52f : 0f;
+            float messageAreaHeight = Mathf.Max(72f, GetMessageHeight());
+            float height = messageAreaHeight + inputAreaHeight + 16f;
             var panel = new Rect(24, Screen.height - height - 140, width, height);
             GUI.Box(panel, string.Empty);
 
             scrollPosition = GUI.BeginScrollView(
-                new Rect(panel.x + 8, panel.y + 8, panel.width - 16, panel.height - 40),
+                new Rect(panel.x + 8, panel.y + 8, panel.width - 16, messageAreaHeight),
                 scrollPosition,
-                new Rect(0, 0, panel.width - 32, Mathf.Max(panel.height - 40, GetMessageHeight())));
+                new Rect(0, 0, panel.width - 32, Mathf.Max(messageAreaHeight, GetMessageHeight())));
 
             float y = 0f;
             if (ChatManager.Instance != null)
@@ -100,24 +107,78 @@ namespace AetherEcho.UI
 
             GUI.EndScrollView();
 
-            GUI.Label(new Rect(panel.x + 8, panel.y + panel.height - 28, 60, 20), activeChannel, channelStyle);
-
-            if (chatFocused)
+            if (!chatFocused)
             {
-                GUI.FocusControl("ChatInput");
+                return;
             }
+
+            float inputY = panel.y + panel.height - 44f;
+            GUI.Label(new Rect(panel.x + 8, inputY, 60, 20), activeChannel, channelStyle);
+            GUI.Label(new Rect(panel.x + 8, inputY - 18f, width - 16, 18), "Enter send | Tab channel | Esc close", channelStyle);
 
             GUI.SetNextControlName("ChatInput");
             chatInput = GUI.TextField(
-                new Rect(panel.x + 70, panel.y + panel.height - 30, panel.width - 80, 22),
+                new Rect(panel.x + 70, inputY + 2f, panel.width - 80, 22),
                 chatInput,
                 256,
                 inputStyle);
 
-            if (chatFocused)
+            if (focusInputNextFrame)
             {
-                GUI.Label(new Rect(panel.x + 8, panel.y + panel.height - 48, width - 16, 18), "Enter send | Tab channel | Esc close", channelStyle);
+                GUI.FocusControl("ChatInput");
+                focusInputNextFrame = false;
             }
+
+            HandleChatKeyboardEvents();
+        }
+
+        private void HandleChatKeyboardEvents()
+        {
+            Event currentEvent = Event.current;
+            if (currentEvent.type != EventType.KeyDown)
+            {
+                return;
+            }
+
+            if (currentEvent.keyCode != KeyCode.Return
+                && currentEvent.keyCode != KeyCode.KeypadEnter
+                && currentEvent.keyCode != KeyCode.Escape
+                && currentEvent.keyCode != KeyCode.Tab)
+            {
+                return;
+            }
+
+            if (suppressEnterThisFrame
+                && (currentEvent.keyCode == KeyCode.Return || currentEvent.keyCode == KeyCode.KeypadEnter))
+            {
+                currentEvent.Use();
+                return;
+            }
+
+            if (currentEvent.keyCode == KeyCode.Tab)
+            {
+                activeChannel = activeChannel == "Global" ? "Say" : "Global";
+                currentEvent.Use();
+                return;
+            }
+
+            if (currentEvent.keyCode == KeyCode.Escape)
+            {
+                chatFocused = false;
+                chatInput = string.Empty;
+                GUI.FocusControl(string.Empty);
+                currentEvent.Use();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(chatInput))
+            {
+                SendCurrentInput();
+            }
+
+            chatFocused = false;
+            GUI.FocusControl(string.Empty);
+            currentEvent.Use();
         }
 
         private float GetMessageHeight()

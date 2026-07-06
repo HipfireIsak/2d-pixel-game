@@ -17,6 +17,7 @@ namespace AetherEcho.UI
         public bool HasTarget => selectedTarget != null && selectedTarget.CurrentHealth > 0;
 
         private GUIStyle targetStyle;
+        private GUIStyle targetLabelStyle;
 
         private void Awake()
         {
@@ -44,6 +45,7 @@ namespace AetherEcho.UI
             {
                 TrySelectUnderCursor();
             }
+
             if (selectedTarget != null && selectedTarget.CurrentHealth <= 0)
             {
                 ClearTarget();
@@ -57,27 +59,22 @@ namespace AetherEcho.UI
 
         private void TrySelectUnderCursor()
         {
-            Camera camera = Camera.main;
+            Camera camera = CombatPickUtility.ResolveGameplayCamera();
             if (camera == null)
             {
                 return;
             }
 
-            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
-            if (!Physics.Raycast(ray, out RaycastHit hit, 120f))
+            if (CombatPickUtility.TryPickEnemyAtScreen(
+                    camera,
+                    Input.mousePosition,
+                    localPlayer.CombatantState,
+                    out CombatantState combatant))
             {
-                return;
+                selectedTarget = combatant;
+                selectedTargetNetId = combatant.netIdentity != null ? combatant.netIdentity.netId : 0;
+                GameplayHud.Instance?.SetToast("Target: " + combatant.CharacterClass);
             }
-
-            CombatantState combatant = hit.collider.GetComponentInParent<CombatantState>();
-            if (combatant == null || !combatant.IsEnemyWith(localPlayer.CombatantState))
-            {
-                return;
-            }
-
-            selectedTarget = combatant;
-            selectedTargetNetId = combatant.netIdentity != null ? combatant.netIdentity.netId : 0;
-            GameplayHud.Instance?.SetToast("Target: " + combatant.CharacterClass);
         }
 
         public void ClearTarget()
@@ -94,22 +91,25 @@ namespace AetherEcho.UI
             }
 
             EnsureStyles();
-            Camera camera = Camera.main;
+            Camera camera = CombatPickUtility.ResolveGameplayCamera();
             if (camera == null)
             {
                 return;
             }
 
-            Vector3 screen = camera.WorldToScreenPoint(selectedTarget.transform.position + Vector3.up * 1.4f);
-            if (screen.z < 0f)
+            if (!CombatPickUtility.TryGetScreenBounds(camera, selectedTarget, out Rect screenBounds, out _))
             {
                 return;
             }
 
-            screen.y = Screen.height - screen.y;
-            var rect = new Rect(screen.x - 24f, screen.y - 24f, 48f, 48f);
-            GUI.Box(rect, string.Empty, targetStyle);
-            GUI.Label(new Rect(screen.x - 50f, screen.y + 28f, 100f, 20), selectedTarget.CharacterClass, targetStyle);
+            Rect guiBounds = CombatPickUtility.ToGuiRect(screenBounds);
+            GUI.Box(guiBounds, string.Empty, targetStyle);
+            var labelRect = new Rect(
+                guiBounds.x + guiBounds.width * 0.5f - 50f,
+                guiBounds.yMax + 2f,
+                100f,
+                20f);
+            GUI.Label(labelRect, selectedTarget.CharacterClass, targetLabelStyle);
         }
 
         private void EnsureStyles()
@@ -121,6 +121,11 @@ namespace AetherEcho.UI
 
             targetStyle = new GUIStyle(GUI.skin.box)
             {
+                normal = { textColor = new Color(1f, 0.85f, 0.2f) }
+            };
+            targetLabelStyle = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter,
                 normal = { textColor = new Color(1f, 0.85f, 0.2f) }
             };
         }

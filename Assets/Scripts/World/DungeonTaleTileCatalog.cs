@@ -34,7 +34,7 @@ namespace AetherEcho.World
                     catalog = Resources.Load<DungeonTaleTileCatalog>("DungeonTaleTileCatalog");
                     if (catalog == null)
                     {
-                        Debug.LogWarning("[DungeonTale] Missing Resources/DungeonTaleTileCatalog.asset — run AetherEcho/Rebuild World Visuals.");
+                        Debug.LogWarning("[DungeonTale] Missing Resources/DungeonTaleTileCatalog.asset — run AetherEcho/Setup Project.");
                     }
                 }
 

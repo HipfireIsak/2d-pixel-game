@@ -57,29 +57,47 @@ namespace AetherEcho.Social
             }
             else
             {
-                AppendMessage(message);
-                NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
-                foreach (NetworkedCombatant player in players)
+                BroadcastGlobalMessage(message);
+            }
+        }
+
+        [Server]
+        private void BroadcastGlobalMessage(ChatMessage message)
+        {
+            NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
+            foreach (NetworkedCombatant player in players)
+            {
+                if (player.connectionToClient == null)
                 {
-                    player.TargetReceiveChatMessage(
-                        player.connectionToClient,
-                        message.channel,
-                        message.senderName,
-                        message.text);
+                    continue;
                 }
+
+                player.TargetReceiveChatMessage(
+                    player.connectionToClient,
+                    message.channel,
+                    message.senderName,
+                    message.text);
             }
         }
 
         [Server]
         private void BroadcastSayMessage(Vector3 origin, ChatMessage message)
         {
-            AppendMessage(message);
             NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
             foreach (NetworkedCombatant player in players)
             {
+                if (player.connectionToClient == null)
+                {
+                    continue;
+                }
+
                 if (Vector3.Distance(origin, player.transform.position) <= SayRadiusMeters)
                 {
-                    player.TargetReceiveChatMessage(player.connectionToClient, message.channel, message.senderName, message.text);
+                    player.TargetReceiveChatMessage(
+                        player.connectionToClient,
+                        message.channel,
+                        message.senderName,
+                        message.text);
                 }
             }
         }

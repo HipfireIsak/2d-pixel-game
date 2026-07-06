@@ -30,14 +30,8 @@ namespace AetherEcho.EditorTools
         public static void SetupProject()
         {
             RebuildAll();
-            EditorUtility.DisplayDialog(
-                "AetherEcho Setup Complete",
-                "Open Assets/Scenes/Bootstrap.unity and press Play.\n\n"
-                + "Host, then explore, talk to the Chrono Sage (E), and cast spells with 1-3.",
-                "OK");
         }
 
-        [MenuItem("AetherEcho/Rebuild World Visuals")]
         public static void RebuildAll()
         {
             Directory.CreateDirectory("Assets/Scenes");
@@ -233,11 +227,11 @@ namespace AetherEcho.EditorTools
             var enemyRoot = new GameObject("Enemy_" + typeId);
             WorldPropBuilder.AddFlatHitCollider(enemyRoot, GameConstants.EnemyCollisionRadius);
 
+            enemyRoot.AddComponent<NetworkIdentity>();
             enemyRoot.AddComponent<CombatantState>();
             enemyRoot.AddComponent<PixelBillboardVisual>();
             enemyRoot.AddComponent<NetworkedEnemy>();
             enemyRoot.AddComponent<EnemyDeathNotifier>();
-            enemyRoot.AddComponent<NetworkIdentity>();
             float scale = GameConstants.EnemyVisualScale;
             float offset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
             enemyRoot.GetComponent<PixelBillboardVisual>().Configure(

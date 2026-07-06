@@ -11,6 +11,8 @@ namespace AetherEcho.Items
     [RequireComponent(typeof(NetworkIdentity))]
     public class GroundLootDrop : NetworkBehaviour
     {
+        public const float PickupRange = 2.75f;
+
         [SyncVar] private string itemId;
         [SyncVar] private int quantity;
         [SyncVar] private int goldAmount;
@@ -28,11 +30,36 @@ namespace AetherEcho.Items
             collider.radius = 0.55f;
             collider.isTrigger = true;
 
-            GroundLootDrop drop = lootObject.AddComponent<GroundLootDrop>();
             lootObject.AddComponent<NetworkIdentity>();
+            GroundLootDrop drop = lootObject.AddComponent<GroundLootDrop>();
             drop.ServerInitialize(dropItemId, dropQuantity, dropGold);
             NetworkServer.Spawn(lootObject);
             return drop;
+        }
+
+        public static bool TryFindNearest(Vector3 playerPosition, float range, out GroundLootDrop nearest)
+        {
+            nearest = null;
+            float bestDistance = range;
+            GroundLootDrop[] drops = FindObjectsOfType<GroundLootDrop>();
+            foreach (GroundLootDrop drop in drops)
+            {
+                if (drop == null)
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(playerPosition, drop.transform.position);
+                if (distance > bestDistance)
+                {
+                    continue;
+                }
+
+                bestDistance = distance;
+                nearest = drop;
+            }
+
+            return nearest != null;
         }
 
         [Server]
@@ -83,38 +110,25 @@ namespace AetherEcho.Items
                 facing: SpriteFacingMode.BillboardY);
         }
 
-        private void Update()
+        [Server]
+        public void ServerTryPickup(NetworkedCombatant player)
         {
-            if (!isServer)
+            if (player == null || player.CombatantState == null || player.CombatantState.IsDead)
             {
                 return;
             }
 
-            NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
-            foreach (NetworkedCombatant player in players)
+            if (Vector3.Distance(transform.position, player.transform.position) > PickupRange)
             {
-                if (player == null || player.CombatantState == null || player.CombatantState.IsDead)
-                {
-                    continue;
-                }
-
-                if (Vector3.Distance(transform.position, player.transform.position) > 1.8f)
-                {
-                    continue;
-                }
-
-                ServerTryPickup(player);
-                break;
+                return;
             }
-        }
 
-        [Server]
-        private void ServerTryPickup(NetworkedCombatant player)
-        {
             CombatantState combatant = player.CombatantState;
+            string toastMessage = string.Empty;
             if (goldAmount > 0)
             {
                 combatant.Gold += goldAmount;
+                toastMessage = "Picked up " + goldAmount + " gold.";
             }
 
             if (!string.IsNullOrWhiteSpace(itemId) && quantity > 0)
@@ -123,8 +137,13 @@ namespace AetherEcho.Items
                 if (inventory != null)
                 {
                     inventory.ServerAddItem(itemId, quantity, out string message);
-                    player.TargetShowLootToast(player.connectionToClient, message);
+                    toastMessage = message;
                 }
+            }
+
+            if (!string.IsNullOrEmpty(toastMessage) && player.connectionToClient != null)
+            {
+                player.TargetShowLootToast(player.connectionToClient, toastMessage);
             }
 
             NetworkServer.Destroy(gameObject);

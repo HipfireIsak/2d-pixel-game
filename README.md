@@ -5,7 +5,7 @@ Minimal Unity 2022.3 LTS project for a self-hosted isometric action RPG prototyp
 ## Quick start
 
 1. Open this folder in **Unity 2022.3.62f2**.
-2. Run **AetherEcho → Rebuild World Visuals** (or **Setup Project**) to wire pixel-art sprites, enemies, and the Lost Ark-style camera.
+2. Run **AetherEcho → Setup Project** to wire pixel-art sprites, enemies, and the Lost Ark-style camera.
 3. Open `Assets/Scenes/Bootstrap.unity` and press Play.
 4. Click **Host Game**, explore the tile field, press **E** near the Chrono Sage, and cast with **1 / 2 / 3**.
 

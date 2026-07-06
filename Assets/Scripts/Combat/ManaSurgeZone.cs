@@ -16,8 +16,8 @@ namespace AetherEcho.Combat
         {
             var zoneObject = new GameObject("ManaSurgeZone");
             zoneObject.transform.position = FlatMovementUtility.SnapToGround(caster.transform.position);
-            ManaSurgeZone zone = zoneObject.AddComponent<ManaSurgeZone>();
             zoneObject.AddComponent<NetworkIdentity>();
+            ManaSurgeZone zone = zoneObject.AddComponent<ManaSurgeZone>();
             NetworkServer.Spawn(zoneObject);
             zone.ServerInitialize(caster, spell);
         }

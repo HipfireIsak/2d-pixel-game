@@ -149,7 +149,8 @@ namespace AetherEcho.UI
                 return casterPos;
             }
 
-            if (!TryGetGroundPointUnderCursor(out Vector3 groundPoint))
+            Camera camera = CombatPickUtility.ResolveGameplayCamera();
+            if (!CombatPickUtility.TryGetGroundPointUnderCursor(camera, Input.mousePosition, out Vector3 groundPoint))
             {
                 return casterPos + localPlayer.transform.forward * Mathf.Min(4f, spell.targeting.range_meters);
             }
@@ -167,23 +168,8 @@ namespace AetherEcho.UI
 
         private static bool TryGetGroundPointUnderCursor(out Vector3 groundPoint)
         {
-            groundPoint = Vector3.zero;
-            Camera camera = Camera.main;
-            if (camera == null)
-            {
-                return false;
-            }
-
-            Ray ray = camera.ScreenPointToRay(Input.mousePosition);
-            var groundPlane = new Plane(Vector3.up, new Vector3(0f, GameConstants.GroundHeight, 0f));
-            if (!groundPlane.Raycast(ray, out float distance))
-            {
-                return false;
-            }
-
-            groundPoint = ray.GetPoint(distance);
-            groundPoint.y = GameConstants.GroundHeight;
-            return true;
+            Camera camera = CombatPickUtility.ResolveGameplayCamera();
+            return CombatPickUtility.TryGetGroundPointUnderCursor(camera, Input.mousePosition, out groundPoint);
         }
 
         private void OnGUI()
@@ -207,7 +193,7 @@ namespace AetherEcho.UI
 
         private void DrawWorldReticle(Vector3 worldCenter, float radiusMeters, bool filledArea)
         {
-            Camera camera = Camera.main;
+            Camera camera = CombatPickUtility.ResolveGameplayCamera();
             if (camera == null)
             {
                 return;

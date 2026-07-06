@@ -163,7 +163,7 @@ namespace AetherEcho.Rendering
             catalog = Resources.Load<ArtCatalog>("ArtCatalog");
             if (catalog == null)
             {
-                Debug.LogWarning("[ArtAssetResolver] Missing Resources/ArtCatalog.asset — run AetherEcho/Rebuild World Visuals.");
+                Debug.LogWarning("[ArtAssetResolver] Missing Resources/ArtCatalog.asset — run AetherEcho/Setup Project.");
             }
         }
     }

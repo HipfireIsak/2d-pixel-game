@@ -14,8 +14,6 @@ namespace AetherEcho.UI
         private bool showInventory;
         private Vector2 scrollPosition;
         private Rect panelRect = new Rect(0, 0, 340f, 320f);
-        private bool dragging;
-        private Vector2 dragOffset;
         private bool panelPositionInitialized;
 
         private GUIStyle titleStyle;
@@ -51,7 +49,6 @@ namespace AetherEcho.UI
         {
             if (!showInventory || localPlayer == null)
             {
-                dragging = false;
                 return;
             }
 
