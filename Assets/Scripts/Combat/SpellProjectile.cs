@@ -1,8 +1,8 @@
 using Mirror;
 using UnityEngine;
-using AetherEcho.Combat;
 using AetherEcho.Core;
 using AetherEcho.Data;
+using AetherEcho.Networking;
 using AetherEcho.Rendering;
 using AetherEcho.World;
 
@@ -22,6 +22,12 @@ namespace AetherEcho.Combat
         private bool hasHit;
         private uint homingTargetNetId;
         private SpriteRenderer visualRenderer;
+        private FlatMovementNetworkSync movementSync;
+
+        private void Awake()
+        {
+            movementSync = FlatMovementNetworkSync.Ensure(gameObject, MovementSyncMode.ServerAuthority);
+        }
 
         [Server]
         public void ServerInitializeHoming(CombatantState casterState, SpellData spell, Vector3 aimDirection, uint targetNetId)
@@ -115,6 +121,11 @@ namespace AetherEcho.Combat
             if (visualRenderer != null)
             {
                 CameraBillboard.Apply(visualRenderer.transform, lockYAxis: true);
+            }
+
+            if (isServer && movementSync != null && !hasHit)
+            {
+                movementSync.SubmitServerTransform(transform.position, transform.rotation, spellData != null ? spellData.id : "projectile");
             }
         }
 

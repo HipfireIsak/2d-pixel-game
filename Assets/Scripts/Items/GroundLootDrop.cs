@@ -2,6 +2,7 @@ using Mirror;
 using UnityEngine;
 using AetherEcho.Combat;
 using AetherEcho.Data;
+using AetherEcho.Networking;
 using AetherEcho.Player;
 using AetherEcho.Rendering;
 using AetherEcho.World;
@@ -12,6 +13,10 @@ namespace AetherEcho.Items
     public class GroundLootDrop : NetworkBehaviour
     {
         public const float PickupRange = 2.75f;
+        private const string PrefabResourcePath = "Items/GroundLoot";
+
+        [SyncVar(hook = nameof(OnPickedUpChanged))]
+        private bool pickedUp;
 
         [SyncVar] private string itemId;
         [SyncVar] private int quantity;
@@ -20,21 +25,49 @@ namespace AetherEcho.Items
 
         private PixelBillboardVisual visual;
         private float bobTimer;
+        private static GameObject cachedPrefab;
+
+        public bool IsAvailableForPickup => !pickedUp && netId != 0;
 
         [Server]
         public static GroundLootDrop ServerSpawn(Vector3 position, string dropItemId, int dropQuantity, int dropGold)
         {
-            var lootObject = new GameObject("GroundLoot");
-            lootObject.transform.position = FlatMovementUtility.SnapToGround(position);
-            SphereCollider collider = lootObject.AddComponent<SphereCollider>();
-            collider.radius = 0.55f;
-            collider.isTrigger = true;
+            GameObject prefab = GetPrefab();
+            GameObject lootObject = prefab != null
+                ? Instantiate(prefab, FlatMovementUtility.SnapToGround(position), Quaternion.identity)
+                : CreateRuntimeLootObject(FlatMovementUtility.SnapToGround(position));
 
-            lootObject.AddComponent<NetworkIdentity>();
-            GroundLootDrop drop = lootObject.AddComponent<GroundLootDrop>();
+            GroundLootDrop drop = lootObject.GetComponent<GroundLootDrop>();
+            if (drop == null)
+            {
+                drop = lootObject.AddComponent<GroundLootDrop>();
+            }
+
             drop.ServerInitialize(dropItemId, dropQuantity, dropGold);
             NetworkServer.Spawn(lootObject);
             return drop;
+        }
+
+        private static GameObject GetPrefab()
+        {
+            if (cachedPrefab == null)
+            {
+                cachedPrefab = Resources.Load<GameObject>(PrefabResourcePath);
+            }
+
+            return cachedPrefab;
+        }
+
+        private static GameObject CreateRuntimeLootObject(Vector3 position)
+        {
+            var lootObject = new GameObject("GroundLoot");
+            lootObject.transform.position = position;
+            SphereCollider collider = lootObject.AddComponent<SphereCollider>();
+            collider.radius = 0.55f;
+            collider.isTrigger = true;
+            lootObject.AddComponent<NetworkIdentity>();
+            lootObject.AddComponent<GroundLootDrop>();
+            return lootObject;
         }
 
         public static bool TryFindNearest(Vector3 playerPosition, float range, out GroundLootDrop nearest)
@@ -44,7 +77,7 @@ namespace AetherEcho.Items
             GroundLootDrop[] drops = FindObjectsOfType<GroundLootDrop>();
             foreach (GroundLootDrop drop in drops)
             {
-                if (drop == null)
+                if (drop == null || !drop.IsAvailableForPickup)
                 {
                     continue;
                 }
@@ -65,23 +98,29 @@ namespace AetherEcho.Items
         [Server]
         private void ServerInitialize(string dropItemId, int dropQuantity, int dropGold)
         {
+            pickedUp = false;
             itemId = dropItemId ?? string.Empty;
             quantity = dropQuantity;
             goldAmount = dropGold;
+            labelText = BuildLabelText();
+            EnsureVisual();
+        }
+
+        private string BuildLabelText()
+        {
             if (goldAmount > 0)
             {
-                labelText = goldAmount + " gold";
-            }
-            else if (ItemContentManager.Instance.TryGetItem(itemId, out ItemDefinition item))
-            {
-                labelText = item.name + (quantity > 1 ? " x" + quantity : string.Empty);
-            }
-            else
-            {
-                labelText = itemId;
+                return goldAmount + " gold";
             }
 
-            EnsureVisual();
+            if (!string.IsNullOrWhiteSpace(itemId)
+                && ItemContentManager.Instance != null
+                && ItemContentManager.Instance.TryGetItem(itemId, out ItemDefinition item))
+            {
+                return item.name + (quantity > 1 ? " x" + quantity : string.Empty);
+            }
+
+            return itemId;
         }
 
         private void Awake()
@@ -111,17 +150,28 @@ namespace AetherEcho.Items
         }
 
         [Server]
-        public void ServerTryPickup(NetworkedCombatant player)
+        public bool ServerTryPickup(NetworkedCombatant player, out string failureReason)
         {
-            if (player == null || player.CombatantState == null || player.CombatantState.IsDead)
+            failureReason = string.Empty;
+            if (pickedUp)
             {
-                return;
+                failureReason = "Loot already taken.";
+                return false;
             }
 
-            if (Vector3.Distance(transform.position, player.transform.position) > PickupRange)
+            if (player == null || player.CombatantState == null || player.CombatantState.IsDead)
             {
-                return;
+                failureReason = "Cannot pick up loot right now.";
+                return false;
             }
+
+            if (GetHorizontalDistanceToPlayer(player) > PickupRange)
+            {
+                failureReason = "Move closer to pick that up.";
+                return false;
+            }
+
+            pickedUp = true;
 
             CombatantState combatant = player.CombatantState;
             string toastMessage = string.Empty;
@@ -136,7 +186,13 @@ namespace AetherEcho.Items
                 PlayerInventory inventory = player.GetComponent<PlayerInventory>();
                 if (inventory != null)
                 {
-                    inventory.ServerAddItem(itemId, quantity, out string message);
+                    if (!inventory.ServerAddItem(itemId, quantity, out string message))
+                    {
+                        pickedUp = false;
+                        failureReason = message;
+                        return false;
+                    }
+
                     toastMessage = message;
                 }
             }
@@ -146,12 +202,38 @@ namespace AetherEcho.Items
                 player.TargetShowLootToast(player.connectionToClient, toastMessage);
             }
 
+            Quests.QuestManager.Instance?.ServerRefreshCollectObjectives(player.netId);
+            Persistence.CharacterPersistenceService.Instance?.Save(player);
             NetworkServer.Destroy(gameObject);
+            return true;
+        }
+
+        private float GetHorizontalDistanceToPlayer(NetworkedCombatant player)
+        {
+            Vector3 playerPosition = player.transform.position;
+            FlatMovementNetworkSync movementSync = player.GetComponent<FlatMovementNetworkSync>();
+            if (movementSync != null)
+            {
+                playerPosition = movementSync.GetServerAuthorityPosition();
+            }
+
+            Vector3 lootPosition = transform.position;
+            playerPosition.y = 0f;
+            lootPosition.y = 0f;
+            return Vector3.Distance(lootPosition, playerPosition);
+        }
+
+        private void OnPickedUpChanged(bool oldValue, bool newValue)
+        {
+            if (newValue)
+            {
+                labelText = string.Empty;
+            }
         }
 
         private void OnGUI()
         {
-            if (string.IsNullOrEmpty(labelText))
+            if (pickedUp || string.IsNullOrEmpty(labelText))
             {
                 return;
             }

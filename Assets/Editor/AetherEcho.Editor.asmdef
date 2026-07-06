@@ -4,6 +4,7 @@
   "references": [
     "AetherEcho",
     "Mirror",
+    "Mirror.Components",
     "Mirror.Transports"
   ],
   "includePlatforms": [

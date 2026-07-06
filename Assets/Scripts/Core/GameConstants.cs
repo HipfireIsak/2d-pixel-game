@@ -57,6 +57,9 @@ namespace AetherEcho.Core
         public const float WorldHalfExtentMeters = ChunkHalfExtentMeters * BiomeGridSize;
         public const float SpawnSafeRadiusMeters = 10f;
 
+        public static UnityEngine.Vector3 HubSpawnPosition => new UnityEngine.Vector3(4f, 0f, 4f);
+        public const float RecallCooldownSeconds = 30f;
+
         public const int ExperiencePerLevel = 100;
 
         public const float FlatColliderHeight = 0.12f;

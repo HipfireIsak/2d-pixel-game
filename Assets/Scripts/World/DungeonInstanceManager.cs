@@ -16,7 +16,6 @@ namespace AetherEcho.World
         public static DungeonInstanceManager Instance { get; private set; }
 
         private static readonly Vector3 DungeonOrigin = new Vector3(600f, 0f, 600f);
-        private static readonly Vector3 HubReturnPosition = new Vector3(4f, 0f, 4f);
 
         private bool dungeonBuilt;
         private bool bossAlive;
@@ -81,7 +80,7 @@ namespace AetherEcho.World
                 return;
             }
 
-            player.ServerTeleport(HubReturnPosition);
+            player.ServerTeleport(GameConstants.HubSpawnPosition);
             player.TargetShowToast(player.connectionToClient, "Returned to the Chrono Hub.");
         }
 
@@ -151,7 +150,11 @@ namespace AetherEcho.World
             }
 
             Vector3 bossPosition = DungeonOrigin + new Vector3(0f, 0f, 4f);
-            WorldContentSpawner.SpawnEnemyPublic("vault_warden", bossPosition, 8);
+            NetworkedEnemy boss = WorldContentSpawner.SpawnEnemyPublic("vault_warden", bossPosition, 8);
+            if (boss != null)
+            {
+                boss.gameObject.name = "VaultWarden";
+            }
         }
 
         private static void CreateFloorTile(Transform parent, Vector3 localPosition, float size)

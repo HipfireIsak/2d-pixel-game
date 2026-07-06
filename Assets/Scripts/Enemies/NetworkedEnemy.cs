@@ -2,20 +2,29 @@ using Mirror;
 using UnityEngine;
 using AetherEcho.Combat;
 using AetherEcho.Core;
+using AetherEcho.Networking;
 using AetherEcho.Rendering;
 using AetherEcho.World;
 
 namespace AetherEcho.Enemies
 {
     [RequireComponent(typeof(CombatantState))]
+    [DefaultExecutionOrder(100)]
     public class NetworkedEnemy : NetworkBehaviour
     {
+        private const float ChaseStopDistance = 1.2f;
+        private const float MoveSpeed = 2.8f;
+
         [SyncVar] private string enemyTypeId = "slime";
         [SyncVar] private int maxHealth = 80;
 
         private CombatantState combatantState;
         private PixelBillboardVisual billboardVisual;
+        private FlatMovementNetworkSync movementSync;
         private float attackCooldownSeconds;
+        private Vector3 lastFramePosition;
+        private bool hasLastFramePosition;
+        private string aiState = "idle";
 
         public string EnemyTypeId => enemyTypeId;
         public CombatantState Combatant => combatantState;
@@ -24,14 +33,20 @@ namespace AetherEcho.Enemies
         {
             combatantState = GetComponent<CombatantState>();
             billboardVisual = GetComponent<PixelBillboardVisual>();
+            movementSync = FlatMovementNetworkSync.Ensure(gameObject, MovementSyncMode.ServerAuthority);
             transform.position = FlatMovementUtility.SnapToGround(transform.position);
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            ApplyVisualFromTypeId(enemyTypeId);
         }
 
         [Server]
         public void ServerInitialize(string typeId, int level)
         {
             enemyTypeId = typeId;
-            ArtCatalog art = ArtAssetResolver.Catalog;
             int health = ResolveBaseHealth(typeId);
             maxHealth = health + level * 10;
             combatantState.CharacterClass = typeId;
@@ -43,20 +58,34 @@ namespace AetherEcho.Enemies
             combatantState.Intelligence = typeId == "vault_warden" ? 12 : 4;
             combatantState.Agility = typeId == "vault_warden" ? 8 : 6;
             combatantState.Relation = CombatRelation.Enemy;
+            ApplyVisualFromTypeId(typeId);
+        }
 
-            if (billboardVisual != null && art != null)
+        private void ApplyVisualFromTypeId(string typeId)
+        {
+            if (billboardVisual == null)
             {
-                Sprite sprite = art.GetEnemySprite(typeId);
-                float scale = GameConstants.EnemyVisualScale;
-                float groundOffset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
-                billboardVisual.Configure(
-                    transform,
-                    sprite,
-                    directionalHero: false,
-                    offset: new Vector3(0f, groundOffset, 0f),
-                    scale: scale,
-                    facing: SpriteFacingMode.BillboardYWhenMoving);
+                return;
             }
+
+            ArtCatalog art = ArtAssetResolver.Catalog;
+            if (art == null)
+            {
+                return;
+            }
+
+            Sprite sprite = art.GetEnemySprite(typeId);
+            float scale = typeId == "vault_warden"
+                ? GameConstants.EnemyVisualScale * 1.75f
+                : GameConstants.EnemyVisualScale;
+            float groundOffset = FlatMovementUtility.GetSpriteGroundOffset(sprite, scale);
+            billboardVisual.Configure(
+                transform,
+                sprite,
+                directionalHero: false,
+                offset: new Vector3(0f, groundOffset, 0f),
+                scale: scale,
+                facing: SpriteFacingMode.BillboardYWhenMoving);
         }
 
         private static int ResolveBaseHealth(string typeId)
@@ -79,40 +108,80 @@ namespace AetherEcho.Enemies
                 return;
             }
 
+            Vector3 positionBefore = transform.position;
             attackCooldownSeconds -= Time.deltaTime;
             CombatantState target = ThreatMatrix.GetHighestThreatTarget(combatantState);
             if (target == null)
             {
+                aiState = "idle";
                 billboardVisual?.SetMoving(false);
+                LogAiFrame(positionBefore, target, 0f);
                 return;
             }
 
             ThreatMatrix.RegisterProximityThreat(target, combatantState, Vector3.Distance(transform.position, target.transform.position));
             Vector3 toTarget = target.transform.position - transform.position;
             toTarget.y = 0f;
-            if (toTarget.magnitude > 1.2f)
+            float targetDistance = toTarget.magnitude;
+            if (targetDistance > ChaseStopDistance)
             {
-                Vector3 step = toTarget.normalized * 2.8f * Time.deltaTime;
+                aiState = "chase";
+                Vector3 step = toTarget.normalized * MoveSpeed * Time.deltaTime;
                 transform.position = FlatMovementUtility.MoveWithFlatCollision(
                     transform.position,
                     step,
                     GameConstants.EnemyCollisionRadius);
                 billboardVisual?.SetMoveDirection(toTarget);
+                LogAiFrame(positionBefore, target, targetDistance);
+                return;
             }
-            else
+
+            aiState = "attack";
+            billboardVisual?.SetMoving(false);
+            if (attackCooldownSeconds <= 0f)
             {
-                billboardVisual?.SetMoving(false);
-                if (attackCooldownSeconds <= 0f)
-                {
-                    target.TakeDamage(enemyTypeId == "vault_warden" ? 16 : 8, DamageType.Physical, combatantState);
-                    attackCooldownSeconds = enemyTypeId == "vault_warden" ? 1.1f : 1.4f;
-                }
+                target.TakeDamage(enemyTypeId == "vault_warden" ? 16 : 8, DamageType.Physical, combatantState);
+                attackCooldownSeconds = enemyTypeId == "vault_warden" ? 1.1f : 1.4f;
             }
+
+            LogAiFrame(positionBefore, target, targetDistance);
         }
 
         private void LateUpdate()
         {
+            if (!isServer || movementSync == null)
+            {
+                return;
+            }
+
             transform.position = FlatMovementUtility.SnapToGround(transform.position);
+            movementSync.SubmitServerTransform(transform.position, transform.rotation, enemyTypeId);
+        }
+
+        private void LogAiFrame(Vector3 positionBefore, CombatantState target, float targetDistance)
+        {
+            float frameDelta = hasLastFramePosition
+                ? MovementDebugLogger.HorizontalDistance(lastFramePosition, transform.position)
+                : 0f;
+            hasLastFramePosition = true;
+            lastFramePosition = transform.position;
+
+            if (frameDelta <= 0.001f && aiState != "attack")
+            {
+                return;
+            }
+
+            string targetLabel = target != null ? target.CharacterClass : "none";
+            MovementDebugLogger.LogEnemy(
+                enemyTypeId,
+                netId,
+                "AiTick",
+                "state=" + aiState
+                + " frameDelta=" + frameDelta.ToString("F4")
+                + " stepDelta=" + MovementDebugLogger.HorizontalDistance(positionBefore, transform.position).ToString("F4")
+                + " targetDist=" + targetDistance.ToString("F2")
+                + " target=" + targetLabel
+                + " pos=" + MovementDebugLogger.FormatVector(transform.position));
         }
 
         [Server]

@@ -106,7 +106,7 @@ namespace AetherEcho.UI
 
             GUI.Label(
                 new Rect(Screen.width - 460, Screen.height - 24, 440, 20),
-                "Click enemy to target | 1 Chrono-Blast | 2 Bolt | 3 Surge | Space Blink | Enter chat | I bag",
+                "Click enemy to target | 1 Chrono-Blast | 2 Bolt | 3 Surge | Space Blink | H recall hub | Enter chat | I bag",
                 bodyStyle);
         }
 

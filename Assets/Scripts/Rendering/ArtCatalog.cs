@@ -65,6 +65,7 @@ namespace AetherEcho.Rendering
                 case "snake": return snake;
                 case "eye": return eye;
                 case "sunflower": return sunflower;
+                case "vault_warden": return skeleton != null ? skeleton : slime;
                 default: return slime;
             }
         }

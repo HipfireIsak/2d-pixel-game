@@ -3,6 +3,7 @@
   "rootNamespace": "AetherEcho",
   "references": [
     "Mirror",
+    "Mirror.Components",
     "Mirror.Transports"
   ],
   "includePlatforms": [],

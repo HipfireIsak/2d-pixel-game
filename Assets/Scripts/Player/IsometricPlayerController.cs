@@ -3,12 +3,14 @@ using UnityEngine;
 using AetherEcho.Combat;
 using AetherEcho.Core;
 using AetherEcho.Items;
+using AetherEcho.Networking;
 using AetherEcho.Rendering;
 using AetherEcho.UI;
 using AetherEcho.World;
 
 namespace AetherEcho.Player
 {
+    [DefaultExecutionOrder(100)]
     public class IsometricPlayerController : NetworkBehaviour
     {
         [SerializeField] private Camera playerCamera;
@@ -17,19 +19,13 @@ namespace AetherEcho.Player
         private NetworkedCombatant networkedCombatant;
         private PixelBillboardVisual billboardVisual;
         private LostArkCameraRig cameraRig;
-        private Vector3 serverPosition;
-        private Vector3 remoteSmoothVelocity;
-        private Vector3 lastSentInput;
-        private float inputSendAccumulator;
-
-        private const float InputSendRateSeconds = 0.05f;
-        private const float RemotePositionSmoothTime = 0.08f;
-        private const float MaxMovementSpeedSlack = 1.25f;
+        private FlatMovementNetworkSync movementSync;
 
         private void Awake()
         {
             networkedCombatant = GetComponent<NetworkedCombatant>();
             billboardVisual = GetComponent<PixelBillboardVisual>();
+            movementSync = FlatMovementNetworkSync.Ensure(gameObject, MovementSyncMode.ClientAuthority);
 
             if (playerCamera != null)
             {
@@ -54,25 +50,22 @@ namespace AetherEcho.Player
 
         private void Update()
         {
-            if (isLocalPlayer)
+            if (!isLocalPlayer)
             {
-                UpdateLocalInput();
                 return;
             }
 
-            transform.position = Vector3.SmoothDamp(
-                transform.position,
-                FlatMovementUtility.SnapToGround(serverPosition),
-                ref remoteSmoothVelocity,
-                RemotePositionSmoothTime);
+            UpdateLocalInput();
         }
 
         private void LateUpdate()
         {
-            if (isLocalPlayer)
+            if (!isLocalPlayer || movementSync == null)
             {
-                transform.position = FlatMovementUtility.SnapToGround(transform.position);
+                return;
             }
+
+            movementSync.SubmitLocalTransform(transform.position, transform.rotation, Input.GetKey(KeyCode.LeftShift));
         }
 
         private void UpdateLocalInput()
@@ -110,31 +103,52 @@ namespace AetherEcho.Player
 
             if (motion.sqrMagnitude > 0.001f)
             {
-                FaceAimDirection(motion / Time.deltaTime);
+                Vector3 velocity = motion / Time.deltaTime;
+                FaceAimDirection(velocity);
                 if (billboardVisual != null)
                 {
-                    billboardVisual.SetMoveDirection(motion / Time.deltaTime);
+                    billboardVisual.SetMoveDirection(velocity);
                 }
             }
+            else if (billboardVisual != null)
+            {
+                billboardVisual.SetMoving(false);
+            }
+
+            Vector3 positionBeforeMove = transform.position;
 
             transform.position = FlatMovementUtility.MoveWithFlatCollision(
                 transform.position,
                 motion,
                 GameConstants.PlayerCollisionRadius);
+
+            float frameDelta = MovementDebugLogger.HorizontalDistance(positionBeforeMove, transform.position);
+            if (motion.sqrMagnitude > 0.0001f || frameDelta > 0.0001f)
+            {
+                MovementDebugLogger.Log(
+                    "LocalMove",
+                    "sprint=" + sprinting
+                    + " speed=" + speed.ToString("F2")
+                    + " frameDelta=" + frameDelta.ToString("F4")
+                    + " input=(" + horizontal.ToString("F2") + "," + vertical.ToString("F2") + ")"
+                    + " before=" + MovementDebugLogger.FormatVector(positionBeforeMove)
+                    + " after=" + MovementDebugLogger.FormatVector(transform.position)
+                    + " dt=" + Time.deltaTime.ToString("F4"));
+            }
+
             HandleLocalSpellInput();
             HandleLootPickupInput();
+            HandleRecallInput();
+        }
 
-            Vector3 velocity = motion / Time.deltaTime;
-            inputSendAccumulator += Time.deltaTime;
-            if (inputSendAccumulator >= InputSendRateSeconds)
+        private void HandleRecallInput()
+        {
+            if (networkedCombatant == null || !Input.GetKeyDown(KeyCode.H))
             {
-                inputSendAccumulator = 0f;
-                if (velocity.sqrMagnitude > 0.001f || lastSentInput.sqrMagnitude > 0.001f)
-                {
-                    lastSentInput = velocity;
-                    CmdSubmitMovementInput(velocity, transform.position);
-                }
+                return;
             }
+
+            networkedCombatant.CmdRecallToHub();
         }
 
         private void HandleLootPickupInput()
@@ -160,9 +174,9 @@ namespace AetherEcho.Player
         private void TryPickupNearestLoot()
         {
             if (GroundLootDrop.TryFindNearest(transform.position, GroundLootDrop.PickupRange, out GroundLootDrop drop)
-                && drop.netIdentity != null)
+                && drop.netId != 0)
             {
-                networkedCombatant.CmdPickupGroundLoot(drop.netIdentity.netId);
+                networkedCombatant.CmdPickupGroundLoot(drop.netId);
             }
         }
 
@@ -180,9 +194,9 @@ namespace AetherEcho.Player
                     transform.position,
                     GroundLootDrop.PickupRange,
                     out GroundLootDrop drop)
-                && drop.netIdentity != null)
+                && drop.netId != 0)
             {
-                networkedCombatant.CmdPickupGroundLoot(drop.netIdentity.netId);
+                networkedCombatant.CmdPickupGroundLoot(drop.netId);
             }
         }
 
@@ -322,75 +336,6 @@ namespace AetherEcho.Player
 
             Quaternion yaw = Quaternion.Euler(0f, GameConstants.CameraYawDegrees, 0f);
             return yaw * input;
-        }
-
-        [Command]
-        private void CmdSubmitMovementInput(Vector3 inputVelocity, Vector3 clientPosition)
-        {
-            if (networkedCombatant != null && networkedCombatant.IsCastingSpell)
-            {
-                return;
-            }
-
-            Vector3 validatedPosition = ValidateClientMovement(transform.position, clientPosition, inputVelocity);
-            Vector3 broadcastPosition;
-
-            if (IsHostOwnerConnection())
-            {
-                // Listen-server host: local client already moved this transform in Update.
-                broadcastPosition = FlatMovementUtility.SnapToGround(transform.position);
-            }
-            else
-            {
-                transform.position = validatedPosition;
-                broadcastPosition = validatedPosition;
-            }
-
-            serverPosition = broadcastPosition;
-            RpcSyncTransform(serverPosition, transform.rotation);
-        }
-
-        private bool IsHostOwnerConnection()
-        {
-            return connectionToClient != null && NetworkServer.localConnection == connectionToClient;
-        }
-
-        private static Vector3 ValidateClientMovement(Vector3 serverPosition, Vector3 clientPosition, Vector3 inputVelocity)
-        {
-            clientPosition = FlatMovementUtility.SnapToGround(clientPosition);
-            Vector3 delta = clientPosition - serverPosition;
-            delta.y = 0f;
-
-            float maxSpeed = GameConstants.PlayerMoveSpeedMetersPerSecond * GameConstants.PlayerSprintMultiplier;
-            float reportedSpeed = new Vector3(inputVelocity.x, 0f, inputVelocity.z).magnitude;
-            maxSpeed = Mathf.Max(maxSpeed, reportedSpeed);
-            float maxDistance = maxSpeed * InputSendRateSeconds * MaxMovementSpeedSlack;
-
-            if (delta.sqrMagnitude <= maxDistance * maxDistance)
-            {
-                return FlatMovementUtility.MoveWithFlatCollision(
-                    serverPosition,
-                    delta,
-                    GameConstants.PlayerCollisionRadius);
-            }
-
-            Vector3 clampedDelta = delta.normalized * maxDistance;
-            return FlatMovementUtility.MoveWithFlatCollision(
-                serverPosition,
-                clampedDelta,
-                GameConstants.PlayerCollisionRadius);
-        }
-
-        [ClientRpc]
-        private void RpcSyncTransform(Vector3 position, Quaternion rotation)
-        {
-            if (isLocalPlayer)
-            {
-                return;
-            }
-
-            serverPosition = position;
-            transform.rotation = rotation;
         }
     }
 }

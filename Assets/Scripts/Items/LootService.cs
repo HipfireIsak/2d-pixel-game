@@ -54,7 +54,6 @@ namespace AetherEcho.Items
             }
 
             World.DungeonInstanceManager.Instance?.ServerNotifyEnemyKilled(enemyTypeId, killer);
-            Persistence.CharacterPersistenceService.Instance?.Save(player);
         }
     }
 }

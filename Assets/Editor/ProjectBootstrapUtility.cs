@@ -25,6 +25,7 @@ namespace AetherEcho.EditorTools
         private const string SlimePrefabPath = "Assets/Resources/Enemies/slime.prefab";
         private const string SkeletonPrefabPath = "Assets/Resources/Enemies/skeleton.prefab";
         private const string SpellProjectilePath = "Assets/Resources/Spells/SpellProjectile.prefab";
+        private const string GroundLootPath = "Assets/Resources/Items/GroundLoot.prefab";
 
         [MenuItem("AetherEcho/Setup Project")]
         public static void SetupProject()
@@ -39,6 +40,7 @@ namespace AetherEcho.EditorTools
             Directory.CreateDirectory("Assets/Resources");
             Directory.CreateDirectory("Assets/Resources/Enemies");
             Directory.CreateDirectory("Assets/Resources/Spells");
+            Directory.CreateDirectory("Assets/Resources/Items");
 
             ArtCatalog artCatalog = CreateOrUpdateArtCatalog();
             CreateOrUpdateTileCatalog();
@@ -49,12 +51,15 @@ namespace AetherEcho.EditorTools
             GameObject snakePrefab = CreateEnemyPrefab("snake", "Assets/Resources/Enemies/snake.prefab", artCatalog.snake);
             GameObject eyePrefab = CreateEnemyPrefab("eye", "Assets/Resources/Enemies/eye.prefab", artCatalog.eye);
             GameObject sunflowerPrefab = CreateEnemyPrefab("sunflower", "Assets/Resources/Enemies/sunflower.prefab", artCatalog.sunflower);
+            GameObject vaultWardenPrefab = CreateEnemyPrefab("vault_warden", "Assets/Resources/Enemies/vault_warden.prefab", artCatalog.skeleton);
             GameObject spellProjectilePrefab = CreateSpellProjectilePrefab();
+            GameObject groundLootPrefab = CreateGroundLootPrefab();
             GameObject playerPrefab = CreatePlayerPrefab(artCatalog);
             GameObject bootstrapPrefab = CreateNetworkBootstrapPrefab(
                 playerPrefab,
-                new[] { slimePrefab, skeletonPrefab, batPrefab, ratPrefab, snakePrefab, eyePrefab, sunflowerPrefab },
-                spellProjectilePrefab);
+                new[] { slimePrefab, skeletonPrefab, batPrefab, ratPrefab, snakePrefab, eyePrefab, sunflowerPrefab, vaultWardenPrefab },
+                spellProjectilePrefab,
+                groundLootPrefab);
             CreateBootstrapScene(bootstrapPrefab);
 
             AssetDatabase.SaveAssets();
@@ -192,6 +197,7 @@ namespace AetherEcho.EditorTools
             WorldPropBuilder.AddFlatHitCollider(playerRoot, GameConstants.PlayerCollisionRadius);
 
             playerRoot.AddComponent<NetworkIdentity>();
+            PlayerMovementSyncSetup.Configure(playerRoot);
             playerRoot.AddComponent<CombatantState>();
             playerRoot.AddComponent<NetworkedCombatant>();
             playerRoot.AddComponent<AetherEcho.Items.PlayerInventory>();
@@ -228,6 +234,7 @@ namespace AetherEcho.EditorTools
             WorldPropBuilder.AddFlatHitCollider(enemyRoot, GameConstants.EnemyCollisionRadius);
 
             enemyRoot.AddComponent<NetworkIdentity>();
+            FlatMovementNetworkSync.Ensure(enemyRoot, MovementSyncMode.ServerAuthority);
             enemyRoot.AddComponent<CombatantState>();
             enemyRoot.AddComponent<PixelBillboardVisual>();
             enemyRoot.AddComponent<NetworkedEnemy>();
@@ -245,10 +252,22 @@ namespace AetherEcho.EditorTools
             return SavePrefab(enemyRoot, path);
         }
 
+        private static GameObject CreateGroundLootPrefab()
+        {
+            var lootRoot = new GameObject("GroundLoot");
+            lootRoot.AddComponent<NetworkIdentity>();
+            SphereCollider collider = lootRoot.AddComponent<SphereCollider>();
+            collider.radius = 0.55f;
+            collider.isTrigger = true;
+            lootRoot.AddComponent<Items.GroundLootDrop>();
+            return SavePrefab(lootRoot, GroundLootPath);
+        }
+
         private static GameObject CreateSpellProjectilePrefab()
         {
             var projectileRoot = new GameObject("SpellProjectile");
             projectileRoot.AddComponent<NetworkIdentity>();
+            FlatMovementNetworkSync.Ensure(projectileRoot, MovementSyncMode.ServerAuthority);
             projectileRoot.AddComponent<SpellProjectile>();
             return SavePrefab(projectileRoot, SpellProjectilePath);
         }
@@ -256,7 +275,8 @@ namespace AetherEcho.EditorTools
         private static GameObject CreateNetworkBootstrapPrefab(
             GameObject playerPrefab,
             GameObject[] enemyPrefabs,
-            GameObject spellProjectilePrefab)
+            GameObject spellProjectilePrefab,
+            GameObject groundLootPrefab)
         {
             var bootstrapObject = new GameObject("NetworkBootstrap");
             bootstrapObject.AddComponent<GameSystemsBootstrap>();
@@ -276,6 +296,7 @@ namespace AetherEcho.EditorTools
             }
 
             RegisterSpawnPrefab(networkManager, spellProjectilePrefab);
+            RegisterSpawnPrefab(networkManager, groundLootPrefab);
 
             SerializedObject serializedSession = new SerializedObject(sessionController);
             serializedSession.FindProperty("networkManager").objectReferenceValue = networkManager;

@@ -5,6 +5,7 @@ using AetherEcho.Combat;
 using AetherEcho.Content;
 using AetherEcho.Core;
 using AetherEcho.Items;
+using AetherEcho.Networking;
 using AetherEcho.Persistence;
 using AetherEcho.Rendering;
 using AetherEcho.Social;
@@ -34,6 +35,7 @@ namespace AetherEcho.Player
         private PlayerInventory playerInventory;
         private PlayerEquipment playerEquipment;
         private float autoSaveAccumulator;
+        private float nextRecallAvailableTime;
         private readonly System.Collections.Generic.Dictionary<string, float> clientCooldownEndTimes
             = new System.Collections.Generic.Dictionary<string, float>();
 
@@ -152,7 +154,15 @@ namespace AetherEcho.Player
         [Server]
         public void ServerTeleport(Vector3 position)
         {
-            transform.position = FlatMovementUtility.SnapToGround(position);
+            Vector3 snapped = FlatMovementUtility.SnapToGround(position);
+            FlatMovementNetworkSync movementSync = GetComponent<FlatMovementNetworkSync>();
+            if (movementSync != null)
+            {
+                movementSync.ApplyAuthoritativeTeleport(snapped, transform.rotation);
+                return;
+            }
+
+            transform.position = snapped;
         }
 
         [Server]
@@ -542,6 +552,28 @@ namespace AetherEcho.Player
         }
 
         [Command]
+        public void CmdRecallToHub()
+        {
+            if (combatantState.IsDead || IsCastingSpell)
+            {
+                TargetShowToast(connectionToClient, "Cannot recall right now.");
+                return;
+            }
+
+            if (Time.time < nextRecallAvailableTime)
+            {
+                float remaining = nextRecallAvailableTime - Time.time;
+                TargetShowToast(connectionToClient, "Recall ready in " + Mathf.CeilToInt(remaining) + "s.");
+                return;
+            }
+
+            nextRecallAvailableTime = Time.time + GameConstants.RecallCooldownSeconds;
+            ServerTeleport(GameConstants.HubSpawnPosition);
+            TargetShowToast(connectionToClient, "Recalled to the Chrono Hub.");
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [Command]
         public void CmdSendChatMessage(string channel, string text)
         {
             ChatManager.Instance?.ServerReceiveMessage(this, channel, text);
@@ -552,16 +584,22 @@ namespace AetherEcho.Player
         {
             if (!NetworkServer.spawned.TryGetValue(lootNetId, out NetworkIdentity identity))
             {
+                TargetShowToast(connectionToClient, "That loot is no longer there.");
                 return;
             }
 
             GroundLootDrop drop = identity.GetComponent<GroundLootDrop>();
             if (drop == null)
             {
+                TargetShowToast(connectionToClient, "Cannot pick that up.");
                 return;
             }
 
-            drop.ServerTryPickup(this);
+            if (!drop.ServerTryPickup(this, out string failureReason)
+                && !string.IsNullOrEmpty(failureReason))
+            {
+                TargetShowToast(connectionToClient, failureReason);
+            }
         }
 
         [TargetRpc]
@@ -757,7 +795,7 @@ namespace AetherEcho.Player
                 return;
             }
 
-            Vector3 hubSpawn = new Vector3(4f, 0f, 4f);
+            Vector3 hubSpawn = GameConstants.HubSpawnPosition;
             ServerTeleport(hubSpawn);
             int respawnHealth = Mathf.Max(1, Mathf.RoundToInt(combatantState.MaxHealth * GameConstants.PlayerRespawnHealthFraction));
             int respawnMana = Mathf.Max(1, Mathf.RoundToInt(combatantState.MaxMana * GameConstants.PlayerRespawnHealthFraction));

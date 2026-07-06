@@ -19,6 +19,7 @@ namespace AetherEcho.Networking
             maxConnections = GameConstants.MaximumPlayersPerSession;
             autoCreatePlayer = true;
             RegisterResourcePrefab("Spells/SpellProjectile");
+            RegisterResourcePrefab("Items/GroundLoot");
         }
 
         private void RegisterResourcePrefab(string resourcePath)

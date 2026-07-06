@@ -122,7 +122,7 @@ namespace AetherEcho.Combat
             GroundLootDrop[] drops = Object.FindObjectsOfType<GroundLootDrop>();
             foreach (GroundLootDrop drop in drops)
             {
-                if (drop == null)
+                if (drop == null || !drop.IsAvailableForPickup)
                 {
                     continue;
                 }

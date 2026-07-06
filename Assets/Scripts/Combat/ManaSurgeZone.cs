@@ -11,16 +11,8 @@ namespace AetherEcho.Combat
     [RequireComponent(typeof(NetworkIdentity))]
     public class ManaSurgeZone : NetworkBehaviour
     {
-        [Server]
-        public static void ServerSpawn(CombatantState caster, SpellData spell)
-        {
-            var zoneObject = new GameObject("ManaSurgeZone");
-            zoneObject.transform.position = FlatMovementUtility.SnapToGround(caster.transform.position);
-            zoneObject.AddComponent<NetworkIdentity>();
-            ManaSurgeZone zone = zoneObject.AddComponent<ManaSurgeZone>();
-            NetworkServer.Spawn(zoneObject);
-            zone.ServerInitialize(caster, spell);
-        }
+        private CombatantState pendingCaster;
+        private SpellData pendingSpell;
 
         private CombatantState caster;
         private SpellData spellData;
@@ -29,6 +21,31 @@ namespace AetherEcho.Combat
         private float tickInterval;
         private int tickDamage;
         private int tickHeal;
+
+        [Server]
+        public static void ServerSpawn(CombatantState casterState, SpellData spell)
+        {
+            var zoneObject = new GameObject("ManaSurgeZone");
+            zoneObject.transform.position = FlatMovementUtility.SnapToGround(casterState.transform.position);
+            zoneObject.AddComponent<NetworkIdentity>();
+            ManaSurgeZone zone = zoneObject.AddComponent<ManaSurgeZone>();
+            zone.pendingCaster = casterState;
+            zone.pendingSpell = spell;
+            NetworkServer.Spawn(zoneObject);
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            if (pendingSpell == null)
+            {
+                return;
+            }
+
+            ServerInitialize(pendingCaster, pendingSpell);
+            pendingCaster = null;
+            pendingSpell = null;
+        }
 
         [Server]
         private void ServerInitialize(CombatantState casterState, SpellData spell)
@@ -50,6 +67,8 @@ namespace AetherEcho.Combat
         [Server]
         private IEnumerator ServerTickRoutine()
         {
+            yield return null;
+
             float elapsed = 0f;
             while (elapsed < duration)
             {
@@ -88,7 +107,10 @@ namespace AetherEcho.Combat
                 }
             }
 
-            RpcPulseFx(transform.position, radius);
+            if (netIdentity != null)
+            {
+                RpcPulseFx(transform.position, radius);
+            }
         }
 
         [ClientRpc]
