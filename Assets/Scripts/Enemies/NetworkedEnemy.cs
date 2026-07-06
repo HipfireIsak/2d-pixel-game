@@ -39,9 +39,9 @@ namespace AetherEcho.Enemies
             combatantState.MaxHealth = maxHealth;
             combatantState.CurrentHealth = maxHealth;
             combatantState.CurrentMana = 0;
-            combatantState.Strength = typeId == "skeleton" ? 12 : 8;
-            combatantState.Intelligence = 4;
-            combatantState.Agility = 6;
+            combatantState.Strength = typeId == "skeleton" || typeId == "vault_warden" ? 18 : 8;
+            combatantState.Intelligence = typeId == "vault_warden" ? 12 : 4;
+            combatantState.Agility = typeId == "vault_warden" ? 8 : 6;
             combatantState.Relation = CombatRelation.Enemy;
 
             if (billboardVisual != null && art != null)
@@ -64,6 +64,7 @@ namespace AetherEcho.Enemies
             switch (typeId)
             {
                 case "skeleton": return 120;
+                case "vault_warden": return 800;
                 case "bat": return 70;
                 case "eye": return 95;
                 case "sunflower": return 85;
@@ -103,8 +104,8 @@ namespace AetherEcho.Enemies
                 billboardVisual?.SetMoving(false);
                 if (attackCooldownSeconds <= 0f)
                 {
-                    target.TakeDamage(8, DamageType.Physical, combatantState);
-                    attackCooldownSeconds = 1.4f;
+                    target.TakeDamage(enemyTypeId == "vault_warden" ? 16 : 8, DamageType.Physical, combatantState);
+                    attackCooldownSeconds = enemyTypeId == "vault_warden" ? 1.1f : 1.4f;
                 }
             }
         }

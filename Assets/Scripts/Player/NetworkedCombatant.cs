@@ -1,9 +1,13 @@
 using Mirror;
+using System.Collections;
 using UnityEngine;
 using AetherEcho.Combat;
 using AetherEcho.Content;
 using AetherEcho.Core;
+using AetherEcho.Items;
+using AetherEcho.Persistence;
 using AetherEcho.Rendering;
+using AetherEcho.Social;
 using AetherEcho.UI;
 using AetherEcho.Vfx;
 using AetherEcho.World;
@@ -17,16 +21,36 @@ namespace AetherEcho.Player
         private string displayName = "Adventurer";
 
         [SyncVar] private bool isCastingSpell;
+        [SyncVar] private string castBarSpellId = string.Empty;
+        [SyncVar] private float castBarStartTime;
+        [SyncVar] private float castBarEndTime;
         [SyncVar] private Vector3 replicatedAimDirection = Vector3.forward;
+
+        private bool castRoutineActive;
 
         private CombatantState combatantState;
         private IsometricPlayerController movementController;
         private PixelBillboardVisual billboardVisual;
+        private PlayerInventory playerInventory;
+        private PlayerEquipment playerEquipment;
+        private float autoSaveAccumulator;
         private readonly System.Collections.Generic.Dictionary<string, float> clientCooldownEndTimes
             = new System.Collections.Generic.Dictionary<string, float>();
 
         public string DisplayName => displayName;
         public bool IsCastingSpell => isCastingSpell;
+        public bool HasCastBar => !string.IsNullOrEmpty(castBarSpellId) && Time.time < castBarEndTime;
+        public string CastBarSpellId => castBarSpellId;
+
+        public float GetCastBarProgress()
+        {
+            if (!HasCastBar || castBarEndTime <= castBarStartTime)
+            {
+                return 0f;
+            }
+
+            return Mathf.Clamp01((Time.time - castBarStartTime) / (castBarEndTime - castBarStartTime));
+        }
         public Vector3 AimDirection => replicatedAimDirection;
         public CombatantState CombatantState => combatantState;
 
@@ -56,12 +80,85 @@ namespace AetherEcho.Player
             combatantState = GetComponent<CombatantState>();
             movementController = GetComponent<IsometricPlayerController>();
             billboardVisual = GetComponent<PixelBillboardVisual>();
+            playerInventory = GetComponent<PlayerInventory>();
+            if (playerInventory == null)
+            {
+                playerInventory = gameObject.AddComponent<PlayerInventory>();
+            }
+
+            playerEquipment = GetComponent<PlayerEquipment>();
+            if (playerEquipment == null)
+            {
+                playerEquipment = gameObject.AddComponent<PlayerEquipment>();
+            }
+        }
+
+        private void Update()
+        {
+            if (!isServer)
+            {
+                return;
+            }
+
+            autoSaveAccumulator += Time.deltaTime;
+            if (autoSaveAccumulator >= GameConstants.AutoSaveIntervalSeconds)
+            {
+                autoSaveAccumulator = 0f;
+                CharacterPersistenceService.Instance?.Save(this);
+            }
         }
 
         public override void OnStartServer()
         {
             ApplyDefaultClassStats(GameConstants.DefaultPlayerClass, GameConstants.DefaultPlayerLevel);
             Quests.QuestManager.Instance?.PushQuestUiToPlayer(this);
+        }
+
+        private bool saveLoaded;
+
+        [Server]
+        private void TryLoadSavedCharacter()
+        {
+            if (CharacterPersistenceService.Instance == null)
+            {
+                return;
+            }
+
+            string characterId = CharacterPersistenceService.SanitizeCharacterId(displayName);
+            if (CharacterPersistenceService.Instance.TryLoad(characterId, out CharacterSaveData saveData))
+            {
+                CharacterPersistenceService.Instance.ApplySaveData(this, saveData);
+            }
+        }
+
+        [Server]
+        public void ServerApplyLoadedCharacter(
+            string name,
+            string className,
+            int level,
+            int experience,
+            int gold,
+            int health,
+            int mana)
+        {
+            displayName = string.IsNullOrWhiteSpace(name) ? displayName : name;
+            ApplyDefaultClassStats(className, level);
+            combatantState.Experience = experience;
+            combatantState.Gold = gold;
+            combatantState.CurrentHealth = Mathf.Min(health, combatantState.MaxHealth);
+            combatantState.CurrentMana = Mathf.Min(mana, combatantState.MaxMana);
+        }
+
+        [Server]
+        public void ServerTeleport(Vector3 position)
+        {
+            transform.position = FlatMovementUtility.SnapToGround(position);
+        }
+
+        [Server]
+        public void ServerNotifyDeath()
+        {
+            TargetShowDeathScreen(connectionToClient, true);
         }
 
         public override void OnStartLocalPlayer()
@@ -72,6 +169,11 @@ namespace AetherEcho.Player
             GameplayHud.Instance?.BindLocalPlayer(this);
             MinimapUI.Instance?.BindLocalPlayer(this);
             SpellGroundTargeting.Instance?.BindLocalPlayer(this, movementController);
+            InventoryUI.Instance?.BindLocalPlayer(this);
+            CharacterSheetUI.Instance?.BindLocalPlayer(this);
+            PartyUI.Instance?.BindLocalPlayer(this);
+            DeathScreenUI.Instance?.BindLocalPlayer(this);
+            TargetSelectionController.Instance?.BindLocalPlayer(this);
             CmdRequestQuestSync();
         }
 
@@ -114,13 +216,14 @@ namespace AetherEcho.Player
             Data.StatBlock stats = ClassContentManager.Instance.ResolveStatsForLevel(classData, level);
             combatantState.CharacterClass = className;
             combatantState.Level = level;
-            combatantState.MaxHealth = stats.health;
+            combatantState.ServerSetBaseStats(
+                stats.health,
+                stats.mana,
+                stats.strength,
+                stats.intelligence,
+                stats.agility);
             combatantState.CurrentHealth = stats.health;
-            combatantState.MaxMana = stats.mana;
             combatantState.CurrentMana = stats.mana;
-            combatantState.Strength = stats.strength;
-            combatantState.Intelligence = stats.intelligence;
-            combatantState.Agility = stats.agility;
             combatantState.Relation = CombatRelation.Ally;
         }
 
@@ -130,10 +233,18 @@ namespace AetherEcho.Player
             displayName = string.IsNullOrWhiteSpace(requestedName)
                 ? "Adventurer"
                 : requestedName.Substring(0, Mathf.Min(24, requestedName.Length));
+
+            if (!saveLoaded)
+            {
+                saveLoaded = true;
+                TryLoadSavedCharacter();
+                Quests.QuestManager.Instance?.ServerRefreshCollectObjectives(netId);
+                Quests.QuestManager.Instance?.PushQuestUiToPlayer(this);
+            }
         }
 
         [Command]
-        public void CmdInteractWithQuestNpc()
+        public void CmdInteractWithQuestNpc(string questGiverName)
         {
             if (Quests.QuestManager.Instance == null)
             {
@@ -143,7 +254,10 @@ namespace AetherEcho.Player
 
             if (Quests.QuestManager.Instance.TryGetActiveProgress(netId, out Quests.QuestProgress progress))
             {
-                if (progress.objectivesComplete)
+                Quests.QuestManager.Instance.TryGetQuest(progress.questId, out Quests.QuestDefinition activeQuest);
+                if (progress.objectivesComplete
+                    && activeQuest != null
+                    && activeQuest.quest_giver_name == questGiverName)
                 {
                     TargetOpenQuestTurnIn(connectionToClient, progress.questId);
                     return;
@@ -153,10 +267,11 @@ namespace AetherEcho.Player
                 return;
             }
 
-            string questId = Quests.QuestManager.Instance.GetSuggestedQuestId(netId);
-            if (Quests.QuestManager.Instance.IsQuestCompleted(netId, questId))
+            string questId = Quests.QuestManager.Instance.GetSuggestedQuestId(netId, questGiverName);
+            if (string.IsNullOrWhiteSpace(questId)
+                || Quests.QuestManager.Instance.IsQuestCompleted(netId, questId))
             {
-                TargetShowToast(connectionToClient, "You have completed all starter quests from the Chrono Sage.");
+                TargetShowToast(connectionToClient, "No quests available from this NPC.");
                 return;
             }
 
@@ -233,39 +348,128 @@ namespace AetherEcho.Player
         [Command]
         public void CmdTalkToQuestNpc(string questId)
         {
-            CmdInteractWithQuestNpc();
+            CmdInteractWithQuestNpc("Chrono Sage");
         }
 
         [TargetRpc]
-        private void TargetShowToast(NetworkConnectionToClient target, string message)
+        public void TargetShowToast(NetworkConnectionToClient target, string message)
         {
             GameplayHud.Instance?.SetToast(message);
         }
 
         [Command]
-        public void CmdRequestCastSpell(string spellId, Vector3 targetPoint, Vector3 aimDirection)
+        public void CmdRequestCastSpell(string spellId, Vector3 targetPoint, Vector3 aimDirection, uint targetNetId)
         {
+            if (castRoutineActive)
+            {
+                TargetShowToast(connectionToClient, "Already casting.");
+                return;
+            }
+
+            StartCoroutine(ServerCastRoutine(spellId, targetPoint, aimDirection, targetNetId));
+        }
+
+        [Server]
+        private IEnumerator ServerCastRoutine(string spellId, Vector3 targetPoint, Vector3 aimDirection, uint targetNetId)
+        {
+            castRoutineActive = true;
+            if (combatantState.IsDead)
+            {
+                TargetShowToast(connectionToClient, "You are dead.");
+                castRoutineActive = false;
+                yield break;
+            }
+
             if (SpellEngine.Instance == null)
             {
                 TargetShowToast(connectionToClient, "Spell engine unavailable.");
-                return;
+                castRoutineActive = false;
+                yield break;
             }
 
             if (!SpellEngine.Instance.CanPlayerCast(combatantState, spellId, out string failureReason))
             {
                 TargetShowToast(connectionToClient, failureReason);
-                return;
+                castRoutineActive = false;
+                yield break;
             }
 
-            isCastingSpell = true;
-            replicatedAimDirection = aimDirection.sqrMagnitude > 0.001f ? aimDirection.normalized : transform.forward;
-            SpellEngine.Instance.ServerExecuteSpell(combatantState, spellId, targetPoint, replicatedAimDirection);
+            if (!SpellContentManager.Instance.TryGetSpell(spellId, out Data.SpellData spell))
+            {
+                castRoutineActive = false;
+                yield break;
+            }
 
+            if (spell.targeting.type == "UnitTarget")
+            {
+                if (targetNetId == 0 || !NetworkServer.spawned.TryGetValue(targetNetId, out NetworkIdentity targetIdentity))
+                {
+                    TargetShowToast(connectionToClient, "Invalid target.");
+                    castRoutineActive = false;
+                    yield break;
+                }
+
+                CombatantState targetState = targetIdentity.GetComponent<CombatantState>();
+                if (targetState == null || !targetState.IsEnemyWith(combatantState))
+                {
+                    TargetShowToast(connectionToClient, "Invalid target.");
+                    castRoutineActive = false;
+                    yield break;
+                }
+
+                float targetRange = spell.targeting.range_meters;
+                if (Vector3.Distance(transform.position, targetIdentity.transform.position) > targetRange)
+                {
+                    TargetShowToast(connectionToClient, "Target out of range.");
+                    castRoutineActive = false;
+                    yield break;
+                }
+            }
+
+            float castTime = Mathf.Max(0f, spell.casting_rules.cast_time_seconds);
+            replicatedAimDirection = aimDirection.sqrMagnitude > 0.001f ? aimDirection.normalized : transform.forward;
+            castBarSpellId = spellId;
+            castBarStartTime = Time.time;
+            castBarEndTime = Time.time + castTime;
+            isCastingSpell = castTime > GameConstants.MovementBlockingCastTimeSeconds
+                             && !spell.casting_rules.can_cast_while_moving;
+
+            if (castTime > 0f)
+            {
+                yield return new WaitForSeconds(castTime);
+            }
+
+            if (combatantState.IsDead)
+            {
+                ClearCastBar();
+                castRoutineActive = false;
+                yield break;
+            }
+
+            if (!SpellEngine.Instance.CanPlayerCast(combatantState, spellId, out failureReason))
+            {
+                TargetShowToast(connectionToClient, failureReason);
+                ClearCastBar();
+                castRoutineActive = false;
+                yield break;
+            }
+
+            SpellEngine.Instance.ServerExecuteSpell(combatantState, spellId, targetPoint, replicatedAimDirection, targetNetId);
             if (spellId == GameConstants.SpellManaSurge)
             {
-                RpcPlaySpellFx(spellId, targetPoint, replicatedAimDirection);
+                RpcPlaySpellFx(spellId, transform.position, replicatedAimDirection);
             }
 
+            ClearCastBar();
+            castRoutineActive = false;
+        }
+
+        [Server]
+        private void ClearCastBar()
+        {
+            castBarSpellId = string.Empty;
+            castBarStartTime = 0f;
+            castBarEndTime = 0f;
             isCastingSpell = false;
         }
 
@@ -290,12 +494,18 @@ namespace AetherEcho.Player
             GameplayHud.Instance?.SetQuestTracker(trackerText, readyToTurnIn);
         }
 
-        public bool TryLocalCast(string spellId, Vector3 targetPoint, Vector3 aimDirection, out string failureReason)
+        public bool TryLocalCast(string spellId, Vector3 targetPoint, Vector3 aimDirection, out string failureReason, uint targetNetId = 0)
         {
             failureReason = string.Empty;
             if (!isLocalPlayer)
             {
                 failureReason = "Not local player.";
+                return false;
+            }
+
+            if (ChatUI.BlocksGameInput)
+            {
+                failureReason = "Chat is open.";
                 return false;
             }
 
@@ -316,17 +526,12 @@ namespace AetherEcho.Player
                 return false;
             }
 
-            if (movementController != null)
+            if (movementController != null && aimDirection.sqrMagnitude > 0.001f)
             {
                 movementController.FaceAimDirection(aimDirection);
             }
 
-            if (spellId == GameConstants.SpellManaSurge && SpellVfxPlayer.Instance != null)
-            {
-                SpellVfxPlayer.Instance.PlaySpell(spellId, transform.position, targetPoint, aimDirection);
-            }
-
-            CmdRequestCastSpell(spellId, targetPoint, aimDirection);
+            CmdRequestCastSpell(spellId, targetPoint, aimDirection, targetNetId);
             return true;
         }
 
@@ -334,6 +539,244 @@ namespace AetherEcho.Player
         public void TargetNotifySpellCast(NetworkConnectionToClient target, string spellId, float cooldownSeconds)
         {
             clientCooldownEndTimes[spellId] = Time.time + cooldownSeconds;
+        }
+
+        [Command]
+        public void CmdSendChatMessage(string channel, string text)
+        {
+            ChatManager.Instance?.ServerReceiveMessage(this, channel, text);
+        }
+
+        [TargetRpc]
+        public void TargetReceiveChatMessage(NetworkConnectionToClient target, string channel, string senderName, string text)
+        {
+            ChatManager.Instance?.ClientAppendMessage(channel, senderName, text);
+        }
+
+        [Command]
+        public void CmdEquipItem(string itemId)
+        {
+            string message = "Equipment unavailable.";
+            if (playerEquipment == null || !playerEquipment.ServerTryEquip(itemId, out message))
+            {
+                TargetShowToast(connectionToClient, message);
+                return;
+            }
+
+            TargetShowToast(connectionToClient, message);
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [Command]
+        public void CmdUnequipSlot(string slotName)
+        {
+            string message = "Equipment unavailable.";
+            if (playerEquipment == null || !playerEquipment.ServerTryUnequip(slotName, out message))
+            {
+                TargetShowToast(connectionToClient, message);
+                return;
+            }
+
+            TargetShowToast(connectionToClient, message);
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [Command]
+        public void CmdUseItem(string itemId)
+        {
+            if (playerInventory == null
+                || !ItemContentManager.Instance.TryGetItem(itemId, out Data.ItemDefinition item))
+            {
+                TargetShowToast(connectionToClient, "Cannot use item.");
+                return;
+            }
+
+            if (item.item_type != "Consumable")
+            {
+                TargetShowToast(connectionToClient, "Item is not consumable.");
+                return;
+            }
+
+            if (!playerInventory.ServerRemoveItem(itemId, 1))
+            {
+                TargetShowToast(connectionToClient, "You do not have that item.");
+                return;
+            }
+
+            if (item.consumable_heal > 0)
+            {
+                combatantState.ServerHeal(item.consumable_heal, combatantState);
+            }
+
+            if (item.consumable_mana > 0)
+            {
+                combatantState.CurrentMana = Mathf.Min(
+                    combatantState.MaxMana,
+                    combatantState.CurrentMana + item.consumable_mana);
+            }
+
+            Quests.QuestManager.Instance?.ServerRefreshCollectObjectives(netId);
+            TargetShowToast(connectionToClient, "Used " + item.name);
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [Command]
+        public void CmdBuyFromVendor(string vendorId, string itemId)
+        {
+            if (playerInventory == null
+                || !ItemContentManager.Instance.TryGetVendor(vendorId, out Data.VendorDefinition vendor)
+                || !ItemContentManager.Instance.TryGetItem(itemId, out Data.ItemDefinition item))
+            {
+                TargetShowToast(connectionToClient, "Purchase failed.");
+                return;
+            }
+
+            int price = item.buy_price;
+            foreach (Data.VendorStockEntry stock in vendor.stock)
+            {
+                if (stock.item_id == itemId)
+                {
+                    price = stock.price;
+                    break;
+                }
+            }
+
+            if (combatantState.Gold < price)
+            {
+                TargetShowToast(connectionToClient, "Not enough gold.");
+                return;
+            }
+
+            if (!playerInventory.ServerAddItem(itemId, 1, out string message))
+            {
+                TargetShowToast(connectionToClient, message);
+                return;
+            }
+
+            combatantState.Gold -= price;
+            Quests.QuestManager.Instance?.ServerRefreshCollectObjectives(netId);
+            TargetShowToast(connectionToClient, "Purchased " + item.name);
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [Command]
+        public void CmdInviteToPartyByName(string targetName)
+        {
+            if (PartyManager.Instance == null || string.IsNullOrWhiteSpace(targetName))
+            {
+                TargetShowToast(connectionToClient, "Invalid player name.");
+                return;
+            }
+
+            NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
+            foreach (NetworkedCombatant candidate in players)
+            {
+                if (candidate.DisplayName.Equals(targetName, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    if (PartyManager.Instance.ServerTryInvite(this, candidate.netId, out string message))
+                    {
+                        TargetShowToast(connectionToClient, message);
+                    }
+                    else
+                    {
+                        TargetShowToast(connectionToClient, message);
+                    }
+
+                    return;
+                }
+            }
+
+            TargetShowToast(connectionToClient, "Player not found.");
+        }
+
+        [Command]
+        public void CmdAcceptPartyInvite(uint inviterNetId)
+        {
+            if (PartyManager.Instance == null)
+            {
+                return;
+            }
+
+            PartyManager.Instance.ServerTryAcceptInvite(this, inviterNetId, out string message);
+            TargetShowToast(connectionToClient, message);
+        }
+
+        [Command]
+        public void CmdLeaveParty()
+        {
+            PartyManager.Instance?.ServerLeaveParty(this);
+            TargetPartyUpdate(connectionToClient, string.Empty, 0);
+            TargetShowToast(connectionToClient, "Left party.");
+        }
+
+        [Command]
+        public void CmdEnterDungeon()
+        {
+            if (DungeonInstanceManager.Instance == null)
+            {
+                TargetShowToast(connectionToClient, "Dungeon unavailable.");
+                return;
+            }
+
+            DungeonInstanceManager.Instance.ServerTryEnterDungeon(this, out string message);
+            if (!string.IsNullOrEmpty(message) && message != "Dungeon entered.")
+            {
+                TargetShowToast(connectionToClient, message);
+            }
+        }
+
+        [Command]
+        public void CmdExitDungeon()
+        {
+            DungeonInstanceManager.Instance?.ServerExitDungeon(this);
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [Command]
+        public void CmdRespawn()
+        {
+            if (!combatantState.IsDead)
+            {
+                return;
+            }
+
+            Vector3 hubSpawn = new Vector3(4f, 0f, 4f);
+            ServerTeleport(hubSpawn);
+            int respawnHealth = Mathf.Max(1, Mathf.RoundToInt(combatantState.MaxHealth * GameConstants.PlayerRespawnHealthFraction));
+            int respawnMana = Mathf.Max(1, Mathf.RoundToInt(combatantState.MaxMana * GameConstants.PlayerRespawnHealthFraction));
+            combatantState.ServerRespawn(respawnHealth, respawnMana);
+            TargetShowDeathScreen(connectionToClient, false);
+            TargetShowToast(connectionToClient, "Respawned at the Chrono Hub.");
+            CharacterPersistenceService.Instance?.Save(this);
+        }
+
+        [TargetRpc]
+        public void TargetShowLootToast(NetworkConnectionToClient target, string message)
+        {
+            GameplayHud.Instance?.SetToast(message);
+        }
+
+        [TargetRpc]
+        public void TargetPartyInvite(NetworkConnectionToClient target, string inviterName, uint inviterNetId)
+        {
+            PartyUI.Instance?.ShowInvite(inviterName, inviterNetId);
+        }
+
+        [TargetRpc]
+        public void TargetPartyUpdate(NetworkConnectionToClient target, string roster, uint leaderNetId)
+        {
+            PartyUI.Instance?.SetPartyRoster(roster, leaderNetId);
+        }
+
+        [TargetRpc]
+        private void TargetShowDeathScreen(NetworkConnectionToClient target, bool dead)
+        {
+            DeathScreenUI.Instance?.SetDead(dead);
+        }
+
+        public override void OnStopServer()
+        {
+            CharacterPersistenceService.Instance?.Save(this);
         }
 
         private void OnDisplayNameChanged(string oldName, string newName)

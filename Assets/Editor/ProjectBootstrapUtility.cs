@@ -200,6 +200,8 @@ namespace AetherEcho.EditorTools
             playerRoot.AddComponent<NetworkIdentity>();
             playerRoot.AddComponent<CombatantState>();
             playerRoot.AddComponent<NetworkedCombatant>();
+            playerRoot.AddComponent<AetherEcho.Items.PlayerInventory>();
+            playerRoot.AddComponent<AetherEcho.Items.PlayerEquipment>();
             playerRoot.AddComponent<IsometricPlayerController>();
             var billboard = playerRoot.AddComponent<PixelBillboardVisual>();
             float heroScale = GameConstants.PlayerVisualScale;

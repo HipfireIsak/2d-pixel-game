@@ -36,8 +36,20 @@ namespace AetherEcho.Combat
         [SyncVar] public int Agility = 10;
         [SyncVar] public int Experience;
         [SyncVar] public int Gold;
+        [SyncVar(hook = nameof(OnIsDeadChanged))] public bool IsDead;
 
         public int ExperienceToNextLevel => Mathf.Max(1, Level * GameConstants.ExperiencePerLevel);
+
+        private int baseMaxHealth;
+        private int baseMaxMana;
+        private int baseStrength;
+        private int baseIntelligence;
+        private int baseAgility;
+        private int equipmentHealthBonus;
+        private int equipmentManaBonus;
+        private int equipmentStrengthBonus;
+        private int equipmentIntelligenceBonus;
+        private int equipmentAgilityBonus;
 
         private readonly Dictionary<string, float> cooldownEndTimes = new Dictionary<string, float>();
         private readonly Dictionary<string, float> activeStatusEffects = new Dictionary<string, float>();
@@ -53,6 +65,38 @@ namespace AetherEcho.Combat
             return Mathf.Max(0f, endTime - Time.time);
         }
 
+        [Server]
+        public void ServerSetBaseStats(int health, int mana, int strength, int intelligence, int agility)
+        {
+            baseMaxHealth = health;
+            baseMaxMana = mana;
+            baseStrength = strength;
+            baseIntelligence = intelligence;
+            baseAgility = agility;
+            MaxHealth = health + equipmentHealthBonus;
+            MaxMana = mana + equipmentManaBonus;
+            Strength = strength + equipmentStrengthBonus;
+            Intelligence = intelligence + equipmentIntelligenceBonus;
+            Agility = agility + equipmentAgilityBonus;
+        }
+
+        [Server]
+        public void ServerRecalculateFromEquipment(Data.ItemStatModifiers bonuses)
+        {
+            equipmentHealthBonus = bonuses?.health ?? 0;
+            equipmentManaBonus = bonuses?.mana ?? 0;
+            equipmentStrengthBonus = bonuses?.strength ?? 0;
+            equipmentIntelligenceBonus = bonuses?.intelligence ?? 0;
+            equipmentAgilityBonus = bonuses?.agility ?? 0;
+            MaxHealth = baseMaxHealth + equipmentHealthBonus;
+            MaxMana = baseMaxMana + equipmentManaBonus;
+            Strength = baseStrength + equipmentStrengthBonus;
+            Intelligence = baseIntelligence + equipmentIntelligenceBonus;
+            Agility = baseAgility + equipmentAgilityBonus;
+            CurrentHealth = Mathf.Min(CurrentHealth, MaxHealth);
+            CurrentMana = Mathf.Min(CurrentMana, MaxMana);
+        }
+
         private void Update()
         {
             if (netIdentity == null || !netIdentity.isServer)
@@ -60,7 +104,10 @@ namespace AetherEcho.Combat
                 return;
             }
 
-            TickManaRegeneration();
+            if (!IsDead)
+            {
+                TickManaRegeneration();
+            }
         }
 
         private void TickManaRegeneration()
@@ -154,12 +201,42 @@ namespace AetherEcho.Combat
                 return;
             }
 
+            if (IsDead)
+            {
+                return;
+            }
+
             CurrentHealth = Mathf.Max(0, CurrentHealth - damageAmount);
             ThreatMatrix.RegisterThreat(source, this, damageAmount, ThreatContributionKind.Damage);
 
             if (CurrentHealth <= 0)
             {
-                Debug.Log("[CombatantState] " + name + " defeated.");
+                ServerHandleDeath();
+            }
+        }
+
+        [Server]
+        private void ServerHandleDeath()
+        {
+            IsDead = true;
+            Debug.Log("[CombatantState] " + name + " defeated.");
+            Player.NetworkedCombatant player = GetComponent<Player.NetworkedCombatant>();
+            player?.ServerNotifyDeath();
+        }
+
+        [Server]
+        public void ServerRespawn(int health, int mana)
+        {
+            IsDead = false;
+            CurrentHealth = health;
+            CurrentMana = mana;
+        }
+
+        private void OnIsDeadChanged(bool oldValue, bool newValue)
+        {
+            if (isLocalPlayer)
+            {
+                UI.DeathScreenUI.Instance?.SetDead(newValue);
             }
         }
 
@@ -183,8 +260,10 @@ namespace AetherEcho.Combat
             {
                 Experience -= ExperienceToNextLevel;
                 Level++;
-                MaxHealth += 8;
-                MaxMana += 10;
+                baseMaxHealth += 8;
+                baseMaxMana += 10;
+                MaxHealth = baseMaxHealth + equipmentHealthBonus;
+                MaxMana = baseMaxMana + equipmentManaBonus;
                 CurrentHealth = MaxHealth;
                 CurrentMana = MaxMana;
             }

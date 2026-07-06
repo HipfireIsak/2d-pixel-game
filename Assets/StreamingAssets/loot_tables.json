@@ -1,0 +1,70 @@
+{
+  "loot_tables": [
+    {
+      "enemy_type_id": "slime",
+      "gold_min": 2,
+      "gold_max": 8,
+      "entries": [
+        { "item_id": "slime_gel", "drop_chance": 0.75, "quantity_min": 1, "quantity_max": 2 },
+        { "item_id": "health_potion", "drop_chance": 0.08, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    },
+    {
+      "enemy_type_id": "skeleton",
+      "gold_min": 5,
+      "gold_max": 15,
+      "entries": [
+        { "item_id": "bone_fragment", "drop_chance": 0.65, "quantity_min": 1, "quantity_max": 2 },
+        { "item_id": "hourglass_fragment", "drop_chance": 0.04, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    },
+    {
+      "enemy_type_id": "bat",
+      "gold_min": 3,
+      "gold_max": 10,
+      "entries": [
+        { "item_id": "slime_gel", "drop_chance": 0.3, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    },
+    {
+      "enemy_type_id": "rat",
+      "gold_min": 1,
+      "gold_max": 5,
+      "entries": []
+    },
+    {
+      "enemy_type_id": "snake",
+      "gold_min": 4,
+      "gold_max": 12,
+      "entries": [
+        { "item_id": "health_potion", "drop_chance": 0.1, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    },
+    {
+      "enemy_type_id": "eye",
+      "gold_min": 6,
+      "gold_max": 18,
+      "entries": [
+        { "item_id": "chrono_shard", "drop_chance": 0.06, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    },
+    {
+      "enemy_type_id": "sunflower",
+      "gold_min": 4,
+      "gold_max": 10,
+      "entries": [
+        { "item_id": "mana_potion", "drop_chance": 0.12, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    },
+    {
+      "enemy_type_id": "vault_warden",
+      "gold_min": 40,
+      "gold_max": 80,
+      "entries": [
+        { "item_id": "fracture_key", "drop_chance": 1.0, "quantity_min": 1, "quantity_max": 1 },
+        { "item_id": "echo_circlet", "drop_chance": 0.25, "quantity_min": 1, "quantity_max": 1 },
+        { "item_id": "chrono_robe", "drop_chance": 0.15, "quantity_min": 1, "quantity_max": 1 }
+      ]
+    }
+  ]
+}

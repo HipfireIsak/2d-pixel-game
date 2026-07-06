@@ -72,7 +72,7 @@ namespace AetherEcho.Combat
             return true;
         }
 
-        public void ServerExecuteSpell(CombatantState caster, string spellId, Vector3 targetPoint, Vector3 aimDirection)
+        public void ServerExecuteSpell(CombatantState caster, string spellId, Vector3 targetPoint, Vector3 aimDirection, uint targetNetId = 0)
         {
             if (caster == null || !caster.isServer)
             {
@@ -101,14 +101,48 @@ namespace AetherEcho.Combat
                     spell.casting_rules.cooldown_seconds);
             }
 
-            if (spell.targeting.type == "DirectionalLine")
+            if (spell.targeting.type == "Blink")
             {
-                ServerLaunchProjectile(caster, spell, aimDirection);
+                ServerExecuteBlink(caster, spell, targetPoint, aimDirection);
+                return;
+            }
+
+            if (spell.payload.duration_seconds > 0f && spell.targeting.type == "SelfAOE")
+            {
+                ManaSurgeZone.ServerSpawn(caster, spell);
+                return;
+            }
+
+            if (spell.targeting.type == "DirectionalLine" || spell.targeting.type == "UnitTarget")
+            {
+                ServerLaunchProjectile(caster, spell, aimDirection, targetNetId);
                 return;
             }
 
             Vector3 impactPoint = ResolveImpactPoint(caster.transform.position, targetPoint, aimDirection, spell);
             ApplySpellImpact(caster, spell, impactPoint, aimDirection);
+        }
+
+        [Server]
+        private void ServerExecuteBlink(CombatantState caster, SpellData spell, Vector3 targetPoint, Vector3 aimDirection)
+        {
+            Vector3 direction = aimDirection.sqrMagnitude > 0.001f ? aimDirection : caster.transform.forward;
+            direction.y = 0f;
+            direction.Normalize();
+            Vector3 destination = caster.transform.position + direction * spell.targeting.range_meters;
+            if (targetPoint.sqrMagnitude > 0.001f)
+            {
+                Vector3 toPoint = targetPoint - caster.transform.position;
+                toPoint.y = 0f;
+                if (toPoint.magnitude > 0.5f)
+                {
+                    destination = caster.transform.position + toPoint.normalized * Mathf.Min(toPoint.magnitude, spell.targeting.range_meters);
+                }
+            }
+
+            destination = FlatMovementUtility.SnapToGround(destination);
+            NetworkedCombatant networkedCaster = caster.GetComponent<NetworkedCombatant>();
+            networkedCaster?.ServerTeleport(destination);
         }
 
         [Server]
@@ -136,7 +170,7 @@ namespace AetherEcho.Combat
         }
 
         [Server]
-        private void ServerLaunchProjectile(CombatantState caster, SpellData spell, Vector3 aimDirection)
+        private void ServerLaunchProjectile(CombatantState caster, SpellData spell, Vector3 aimDirection, uint targetNetId = 0)
         {
             GameObject prefab = Resources.Load<GameObject>("Spells/SpellProjectile");
             if (prefab == null)
@@ -154,7 +188,15 @@ namespace AetherEcho.Combat
                 return;
             }
 
-            projectile.ServerInitialize(caster, spell, aimDirection);
+            if (targetNetId != 0)
+            {
+                projectile.ServerInitializeHoming(caster, spell, aimDirection, targetNetId);
+            }
+            else
+            {
+                projectile.ServerInitialize(caster, spell, aimDirection);
+            }
+
             NetworkServer.Spawn(projectileObject);
         }
 

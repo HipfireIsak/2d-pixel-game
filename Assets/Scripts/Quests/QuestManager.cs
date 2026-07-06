@@ -23,7 +23,10 @@ namespace AetherEcho.Quests
         public static readonly string[] StarterQuestIds =
         {
             "quest_fractured_slimes",
-            "quest_bone_echoes"
+            "quest_bone_echoes",
+            "quest_merchant_supplies",
+            "quest_eye_of_time",
+            "quest_vault_watcher"
         };
 
         private readonly Dictionary<string, QuestDefinition> questDatabase = new Dictionary<string, QuestDefinition>();
@@ -75,11 +78,16 @@ namespace AetherEcho.Quests
             return activeQuestByPlayerNetId.TryGetValue(playerNetId, out progress);
         }
 
-        public string GetSuggestedQuestId(uint playerNetId)
+        public string GetSuggestedQuestId(uint playerNetId, string questGiverName)
         {
             foreach (string questId in StarterQuestIds)
             {
                 if (IsQuestCompleted(playerNetId, questId))
+                {
+                    continue;
+                }
+
+                if (!TryGetQuest(questId, out QuestDefinition quest) || quest.quest_giver_name != questGiverName)
                 {
                     continue;
                 }
@@ -93,7 +101,7 @@ namespace AetherEcho.Quests
                 return questId;
             }
 
-            return StarterQuestIds[0];
+            return string.Empty;
         }
 
         public bool ServerTryAcceptQuest(NetworkedCombatant player, string questId, out string message)
@@ -158,9 +166,27 @@ namespace AetherEcho.Quests
                 return false;
             }
 
+            if (quest.objectives.Exists(objective => objective.type == "CollectItem"))
+            {
+                ServerRefreshCollectObjectives(netId);
+                if (!progress.objectivesComplete)
+                {
+                    message = "Quest objectives not complete.";
+                    return false;
+                }
+            }
+
             CombatantState combatant = player.CombatantState;
             combatant.ServerGrantExperience(quest.rewards.experience);
             combatant.Gold += quest.rewards.gold;
+
+            Items.PlayerInventory inventory = player.GetComponent<Items.PlayerInventory>();
+            if (inventory != null && !string.IsNullOrWhiteSpace(quest.rewards.item_id))
+            {
+                inventory.ServerAddItem(quest.rewards.item_id, 1, out _);
+            }
+
+            Persistence.CharacterPersistenceService.Instance?.Save(player);
             activeQuestByPlayerNetId.Remove(netId);
 
             if (!completedQuestsByPlayer.TryGetValue(netId, out HashSet<string> completed))
@@ -195,22 +221,169 @@ namespace AetherEcho.Quests
 
             foreach (QuestObjectiveDefinition objective in quest.objectives)
             {
-                if (objective.type != "KillEnemy" || objective.target_id != enemyTypeId)
+                if (objective.type == "KillEnemy" && objective.target_id == enemyTypeId)
+                {
+                    progress.currentCount++;
+                    if (progress.currentCount >= objective.required_count)
+                    {
+                        progress.objectivesComplete = true;
+                    }
+                }
+            }
+
+            CreditPartyKillProgress(killer, enemyTypeId);
+        }
+
+        [Server]
+        public void ServerRefreshCollectObjectives(uint playerNetId)
+        {
+            if (!activeQuestByPlayerNetId.TryGetValue(playerNetId, out QuestProgress progress)
+                || progress.objectivesComplete)
+            {
+                return;
+            }
+
+            if (!questDatabase.TryGetValue(progress.questId, out QuestDefinition quest))
+            {
+                return;
+            }
+
+            if (!NetworkServer.spawned.TryGetValue(playerNetId, out NetworkIdentity identity))
+            {
+                return;
+            }
+
+            Items.PlayerInventory inventory = identity.GetComponent<Items.PlayerInventory>();
+            if (inventory == null)
+            {
+                return;
+            }
+
+            foreach (QuestObjectiveDefinition objective in quest.objectives)
+            {
+                if (objective.type != "CollectItem")
                 {
                     continue;
                 }
 
-                progress.currentCount++;
+                progress.currentCount = inventory.ServerCountItem(objective.target_id);
                 if (progress.currentCount >= objective.required_count)
                 {
                     progress.objectivesComplete = true;
                 }
             }
+        }
 
-            NetworkedCombatant player = killer.GetComponent<NetworkedCombatant>();
-            if (player != null)
+        [Server]
+        private void CreditPartyKillProgress(CombatantState killer, string enemyTypeId)
+        {
+            NetworkedCombatant killerPlayer = killer.GetComponent<NetworkedCombatant>();
+            if (killerPlayer == null || Social.PartyManager.Instance == null)
             {
-                PushQuestUiToPlayer(player);
+                UpdateQuestUiForNetId(killer.netIdentity.netId);
+                return;
+            }
+
+            foreach (uint memberNetId in Social.PartyManager.Instance.ServerGetPartyMemberNetIds(killerPlayer.netId))
+            {
+                if (memberNetId == killerPlayer.netId)
+                {
+                    UpdateQuestUiForNetId(memberNetId);
+                    continue;
+                }
+
+                if (!NetworkServer.spawned.TryGetValue(memberNetId, out NetworkIdentity memberIdentity))
+                {
+                    continue;
+                }
+
+                if (Vector3.Distance(killer.transform.position, memberIdentity.transform.position) > 40f)
+                {
+                    continue;
+                }
+
+                ServerRegisterEnemyKillForPlayer(memberNetId, enemyTypeId);
+            }
+        }
+
+        [Server]
+        private void ServerRegisterEnemyKillForPlayer(uint netId, string enemyTypeId)
+        {
+            if (!activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress progress) || progress.objectivesComplete)
+            {
+                return;
+            }
+
+            if (!questDatabase.TryGetValue(progress.questId, out QuestDefinition quest))
+            {
+                return;
+            }
+
+            foreach (QuestObjectiveDefinition objective in quest.objectives)
+            {
+                if (objective.type == "KillEnemy" && objective.target_id == enemyTypeId)
+                {
+                    progress.currentCount++;
+                    if (progress.currentCount >= objective.required_count)
+                    {
+                        progress.objectivesComplete = true;
+                    }
+                }
+            }
+
+            UpdateQuestUiForNetId(netId);
+        }
+
+        [Server]
+        private void UpdateQuestUiForNetId(uint netId)
+        {
+            if (NetworkServer.spawned.TryGetValue(netId, out NetworkIdentity identity))
+            {
+                NetworkedCombatant player = identity.GetComponent<NetworkedCombatant>();
+                if (player != null)
+                {
+                    PushQuestUiToPlayer(player);
+                }
+            }
+        }
+
+        public Persistence.QuestSaveData BuildSaveData(uint playerNetId)
+        {
+            var saveData = new Persistence.QuestSaveData();
+            if (completedQuestsByPlayer.TryGetValue(playerNetId, out HashSet<string> completed))
+            {
+                saveData.completedQuestIds.AddRange(completed);
+            }
+
+            if (activeQuestByPlayerNetId.TryGetValue(playerNetId, out QuestProgress progress))
+            {
+                saveData.activeQuestId = progress.questId;
+                saveData.activeQuestCount = progress.currentCount;
+                saveData.activeQuestComplete = progress.objectivesComplete;
+            }
+
+            return saveData;
+        }
+
+        [Server]
+        public void ServerLoadSaveData(uint playerNetId, Persistence.QuestSaveData saveData)
+        {
+            if (saveData == null)
+            {
+                return;
+            }
+
+            completedQuestsByPlayer[playerNetId] = new HashSet<string>(saveData.completedQuestIds ?? new List<string>());
+            activeQuestByPlayerNetId.Remove(playerNetId);
+
+            if (!string.IsNullOrWhiteSpace(saveData.activeQuestId))
+            {
+                activeQuestByPlayerNetId[playerNetId] = new QuestProgress
+                {
+                    questId = saveData.activeQuestId,
+                    currentCount = saveData.activeQuestCount,
+                    objectivesComplete = saveData.activeQuestComplete
+                };
             }
         }
 
@@ -237,7 +410,7 @@ namespace AetherEcho.Quests
             QuestObjectiveDefinition objective = quest.objectives.Count > 0 ? quest.objectives[0] : null;
             if (progress.objectivesComplete)
             {
-                return "[Turn In] " + quest.title + " — return to the Chrono Sage (E)";
+                return "[Turn In] " + quest.title + " — return to " + quest.quest_giver_name + " (E)";
             }
 
             return "[Active] " + quest.title + "  "

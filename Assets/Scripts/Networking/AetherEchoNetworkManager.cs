@@ -2,6 +2,8 @@ using Mirror;
 using kcp2k;
 using UnityEngine;
 using AetherEcho.Core;
+using AetherEcho.Player;
+using AetherEcho.Persistence;
 
 namespace AetherEcho.Networking
 {
@@ -26,6 +28,20 @@ namespace AetherEcho.Networking
             {
                 spawnPrefabs.Add(prefab);
             }
+        }
+
+        public override void OnServerDisconnect(NetworkConnectionToClient conn)
+        {
+            if (conn != null && conn.identity != null)
+            {
+                NetworkedCombatant player = conn.identity.GetComponent<NetworkedCombatant>();
+                if (player != null)
+                {
+                    CharacterPersistenceService.Instance?.Save(player);
+                }
+            }
+
+            base.OnServerDisconnect(conn);
         }
 
         public override void OnServerAddPlayer(NetworkConnectionToClient connection)

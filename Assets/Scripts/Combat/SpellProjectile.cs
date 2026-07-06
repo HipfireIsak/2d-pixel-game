@@ -20,7 +20,15 @@ namespace AetherEcho.Combat
         private float distanceTraveled;
         private float maxDistance = 12f;
         private bool hasHit;
+        private uint homingTargetNetId;
         private SpriteRenderer visualRenderer;
+
+        [Server]
+        public void ServerInitializeHoming(CombatantState casterState, SpellData spell, Vector3 aimDirection, uint targetNetId)
+        {
+            homingTargetNetId = targetNetId;
+            ServerInitialize(casterState, spell, aimDirection);
+        }
 
         [Server]
         public void ServerInitialize(CombatantState casterState, SpellData spell, Vector3 aimDirection)
@@ -73,6 +81,20 @@ namespace AetherEcho.Combat
             }
 
             float step = defaultSpeed * Time.deltaTime;
+            if (homingTargetNetId != 0
+                && NetworkServer.spawned.TryGetValue(homingTargetNetId, out NetworkIdentity targetIdentity)
+                && targetIdentity != null)
+            {
+                Vector3 toTarget = targetIdentity.transform.position - transform.position;
+                toTarget.y = 0f;
+                if (toTarget.sqrMagnitude > 0.05f)
+                {
+                    direction = Vector3.Slerp(direction, toTarget.normalized, Time.deltaTime * 10f);
+                    direction.y = 0f;
+                    direction.Normalize();
+                }
+            }
+
             Vector3 groundPos = FlatMovementUtility.SnapToGround(transform.position + direction * step);
             transform.position = groundPos + Vector3.up * 0.75f;
             distanceTraveled += step;

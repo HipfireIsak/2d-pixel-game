@@ -1,0 +1,109 @@
+{
+  "items": [
+    {
+      "id": "chrono_shard",
+      "name": "Chrono Shard",
+      "description": "A fragment of frozen time.",
+      "item_type": "Material",
+      "equip_slot": "",
+      "stack_size": 20,
+      "buy_price": 0,
+      "sell_price": 8
+    },
+    {
+      "id": "hourglass_fragment",
+      "name": "Hourglass Fragment",
+      "description": "Sand that flows backward.",
+      "item_type": "Material",
+      "equip_slot": "",
+      "stack_size": 20,
+      "buy_price": 0,
+      "sell_price": 12
+    },
+    {
+      "id": "slime_gel",
+      "name": "Slime Gel",
+      "description": "Gooey temporal residue.",
+      "item_type": "Material",
+      "equip_slot": "",
+      "stack_size": 99,
+      "buy_price": 0,
+      "sell_price": 3
+    },
+    {
+      "id": "bone_fragment",
+      "name": "Bone Fragment",
+      "description": "Echo bone from a shattered skeleton.",
+      "item_type": "Material",
+      "equip_slot": "",
+      "stack_size": 99,
+      "buy_price": 0,
+      "sell_price": 5
+    },
+    {
+      "id": "apprentice_staff",
+      "name": "Apprentice Staff",
+      "description": "A simple chrono-tuned staff.",
+      "item_type": "Weapon",
+      "equip_slot": "Weapon",
+      "stack_size": 1,
+      "buy_price": 50,
+      "sell_price": 15,
+      "stat_modifiers": { "intelligence": 5, "mana": 20 }
+    },
+    {
+      "id": "chrono_robe",
+      "name": "Chrono Robe",
+      "description": "Robes woven from fractured timelines.",
+      "item_type": "Armor",
+      "equip_slot": "Chest",
+      "stack_size": 1,
+      "buy_price": 75,
+      "sell_price": 20,
+      "stat_modifiers": { "health": 25, "intelligence": 3 }
+    },
+    {
+      "id": "echo_circlet",
+      "name": "Echo Circlet",
+      "description": "A circlet that hums with temporal energy.",
+      "item_type": "Armor",
+      "equip_slot": "Head",
+      "stack_size": 1,
+      "buy_price": 60,
+      "sell_price": 18,
+      "stat_modifiers": { "mana": 30, "intelligence": 2 }
+    },
+    {
+      "id": "health_potion",
+      "name": "Health Potion",
+      "description": "Restores 50 health.",
+      "item_type": "Consumable",
+      "equip_slot": "",
+      "stack_size": 20,
+      "buy_price": 10,
+      "sell_price": 2,
+      "consumable_heal": 50
+    },
+    {
+      "id": "mana_potion",
+      "name": "Mana Potion",
+      "description": "Restores 40 mana.",
+      "item_type": "Consumable",
+      "equip_slot": "",
+      "stack_size": 20,
+      "buy_price": 10,
+      "sell_price": 2,
+      "consumable_mana": 40
+    },
+    {
+      "id": "fracture_key",
+      "name": "Fracture Key",
+      "description": "Opens the Echo Vault dungeon portal.",
+      "item_type": "Key",
+      "equip_slot": "",
+      "stack_size": 1,
+      "buy_price": 0,
+      "sell_price": 0
+    }
+  ]
+}

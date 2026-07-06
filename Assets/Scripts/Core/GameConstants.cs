@@ -27,6 +27,13 @@ namespace AetherEcho.Core
         public const string DataSpellsFileName = "spells.json";
         public const string DataClassesFileName = "classes.json";
         public const string DataQuestsFileName = "quests.json";
+        public const string DataItemsFileName = "items.json";
+        public const string DataLootTablesFileName = "loot_tables.json";
+        public const string DataVendorsFileName = "vendors.json";
+
+        public const int InventoryMaxSlots = 20;
+        public const float PlayerRespawnHealthFraction = 0.5f;
+        public const float AutoSaveIntervalSeconds = 60f;
 
         public const string DefaultPlayerClass = "Mage";
         public const int DefaultPlayerLevel = 5;
@@ -34,6 +41,10 @@ namespace AetherEcho.Core
         public const string SpellChronoBlast = "sp_chronoblast_01";
         public const string SpellTemporalBolt = "sp_temporal_bolt";
         public const string SpellManaSurge = "sp_mana_surge";
+        public const string SpellChronoBlink = "sp_chrono_blink";
+
+        public const float MovementBlockingCastTimeSeconds = 0.5f;
+        public const float MobRespawnSecondsDefault = 12f;
 
         public const int ObstacleLayerIndex = 8;
 

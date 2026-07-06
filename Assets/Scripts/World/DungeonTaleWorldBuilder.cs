@@ -159,14 +159,7 @@ namespace AetherEcho.World
 
             if (!isHub)
             {
-                Random.InitState(seed + 707);
-                float half = chunkMeters * 0.5f - 12f;
-                for (int i = 0; i < EnemiesPerChunk; i++)
-                {
-                    Vector3 pos = RandomPointInChunk(center, half, avoidCenter: false);
-                    string typeId = layout.enemyTypes[Random.Range(0, layout.enemyTypes.Length)];
-                    WorldContentSpawner.SpawnEnemyPublic(typeId, pos, 2 + Random.Range(0, 3));
-                }
+                // Enemies are spawned by MobSpawnZoneManager area zones.
             }
         }
 

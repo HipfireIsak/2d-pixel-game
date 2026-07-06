@@ -1,4 +1,3 @@
-using Mirror;
 using UnityEngine;
 using AetherEcho.Player;
 using AetherEcho.UI;
@@ -7,7 +6,13 @@ namespace AetherEcho.World
 {
     public class QuestNpcInteractable : MonoBehaviour
     {
+        [SerializeField] private string questGiverName = "Chrono Sage";
         [SerializeField] private float interactRadiusMeters = 2.8f;
+
+        public void Configure(string giverName)
+        {
+            questGiverName = giverName;
+        }
 
         private void Update()
         {
@@ -21,7 +26,12 @@ namespace AetherEcho.World
                 return;
             }
 
-            NetworkedCombatant localPlayer = FindLocalPlayer();
+            if (VendorUI.Instance != null && VendorUI.Instance.IsOpen)
+            {
+                return;
+            }
+
+            NetworkedCombatant localPlayer = NpcInteractUtility.FindLocalPlayer();
             if (localPlayer == null)
             {
                 return;
@@ -32,21 +42,7 @@ namespace AetherEcho.World
                 return;
             }
 
-            localPlayer.CmdInteractWithQuestNpc();
-        }
-
-        private static NetworkedCombatant FindLocalPlayer()
-        {
-            NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
-            foreach (NetworkedCombatant player in players)
-            {
-                if (player.isLocalPlayer)
-                {
-                    return player;
-                }
-            }
-
-            return null;
+            localPlayer.CmdInteractWithQuestNpc(questGiverName);
         }
     }
 }

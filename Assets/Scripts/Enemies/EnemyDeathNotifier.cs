@@ -33,6 +33,14 @@ namespace AetherEcho.Enemies
             if (killer != null && networkedEnemy != null)
             {
                 networkedEnemy.ServerNotifyKilledBy(killer);
+                Items.LootService.Instance?.ServerGrantKillLoot(
+                    killer,
+                    networkedEnemy.EnemyTypeId,
+                    transform.position);
+                if (netIdentity != null)
+                {
+                    World.MobSpawnZoneManager.Instance?.ServerNotifyEnemyDestroyed(netIdentity.netId);
+                }
             }
 
             Invoke(nameof(DestroyEnemy), 1.5f);

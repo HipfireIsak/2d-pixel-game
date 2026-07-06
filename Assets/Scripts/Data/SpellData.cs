@@ -54,6 +54,10 @@ namespace AetherEcho.Data
         public float scaling_factor = 1f;
         public List<StatusEffectReference> applied_status_effects = new List<StatusEffectReference>();
         public SpawnEntityConfig spawn_entity_on_impact;
+        public float duration_seconds;
+        public float tick_interval_seconds = 0.5f;
+        public int tick_damage_magical;
+        public int tick_heal;
     }
 
     [Serializable]

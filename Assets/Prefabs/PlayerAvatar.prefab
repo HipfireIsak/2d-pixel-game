@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 5980721433053223844}
   - component: {fileID: 5631528908037789215}
   - component: {fileID: 5039349022995435742}
+  - component: {fileID: 2106688529446237905}
+  - component: {fileID: 3286271052326374597}
   - component: {fileID: 7613295744366010465}
   - component: {fileID: 1906030710748365732}
   m_Layer: 0
@@ -107,6 +109,7 @@ MonoBehaviour:
   Agility: 10
   Experience: 0
   Gold: 0
+  IsDead: 0
 --- !u!114 &5039349022995435742
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,6 +120,38 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3c15e6cad0b155e4f9c61555fe8e8341, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMethod: 0
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &2106688529446237905
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4489230869352727412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f33f9c7585406d43bd329478b086121, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMethod: 0
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
+--- !u!114 &3286271052326374597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4489230869352727412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1980b8855a190e439c23f7a98ad0e58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   syncMethod: 0

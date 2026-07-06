@@ -3,13 +3,13 @@
     {
       "id": "sp_chronoblast_01",
       "name": "Chrono-Blast",
-      "description": "Fires a temporal beam that explodes, leaving a Time Echo at the impact site.",
+      "description": "Marks a target, then fires a homing temporal blast after a short cast.",
       "allowed_classes": ["Mage", "Chrono-Knight"],
       "required_level": 1,
       "icon_texture": "assets/icons/spells/chronoblast.png",
       "vfx_prefab": "vfx_chrono_beam",
       "casting_rules": {
-        "cast_time_seconds": 0.6,
+        "cast_time_seconds": 1.0,
         "cooldown_seconds": 4.0,
         "resource_type": "Mana",
         "resource_cost": 30,
@@ -17,10 +17,10 @@
         "can_cast_while_moving": false
       },
       "targeting": {
-        "type": "DirectionalLine",
-        "range_meters": 12.0,
+        "type": "UnitTarget",
+        "range_meters": 14.0,
         "radius_meters": 1.8,
-        "max_targets": 5,
+        "max_targets": 1,
         "valid_relations": ["Enemy", "Destructible"]
       },
       "payload": {
@@ -73,18 +73,18 @@
     {
       "id": "sp_mana_surge",
       "name": "Mana Surge",
-      "description": "Releases chrono energy around you, healing allies and damaging nearby foes.",
+      "description": "Creates a chrono field that pulses healing and damage over time.",
       "allowed_classes": ["Mage"],
       "required_level": 1,
       "icon_texture": "assets/icons/spells/manasurge.png",
       "vfx_prefab": "vfx_mana_surge",
       "casting_rules": {
-        "cast_time_seconds": 0.5,
-        "cooldown_seconds": 6.0,
+        "cast_time_seconds": 0.3,
+        "cooldown_seconds": 8.0,
         "resource_type": "Mana",
         "resource_cost": 35,
         "requires_line_of_sight": false,
-        "can_cast_while_moving": false
+        "can_cast_while_moving": true
       },
       "targeting": {
         "type": "SelfAOE",
@@ -94,9 +94,41 @@
         "valid_relations": ["Enemy", "Ally", "Self"]
       },
       "payload": {
-        "instant_damage_magical": 55,
+        "instant_damage_magical": 0,
         "damage_scaling_stat": "Intelligence",
         "scaling_factor": 0.8,
+        "duration_seconds": 4.0,
+        "tick_interval_seconds": 0.5,
+        "tick_damage_magical": 16,
+        "tick_heal": 10,
+        "applied_status_effects": []
+      }
+    },
+    {
+      "id": "sp_chrono_blink",
+      "name": "Chrono Blink",
+      "description": "Blink forward through fractured space.",
+      "allowed_classes": ["Mage", "Chrono-Knight"],
+      "required_level": 1,
+      "icon_texture": "assets/icons/spells/chronoblink.png",
+      "vfx_prefab": "vfx_chrono_blink",
+      "casting_rules": {
+        "cast_time_seconds": 0.0,
+        "cooldown_seconds": 5.0,
+        "resource_type": "Mana",
+        "resource_cost": 20,
+        "requires_line_of_sight": false,
+        "can_cast_while_moving": true
+      },
+      "targeting": {
+        "type": "Blink",
+        "range_meters": 7.0,
+        "radius_meters": 0.0,
+        "max_targets": 1,
+        "valid_relations": ["Self"]
+      },
+      "payload": {
+        "instant_damage_magical": 0,
         "applied_status_effects": []
       }
     },

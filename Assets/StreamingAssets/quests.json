@@ -37,6 +37,63 @@
         "gold": 40,
         "item_id": "hourglass_fragment"
       }
+    },
+    {
+      "id": "quest_merchant_supplies",
+      "title": "Merchant Supplies",
+      "description": "Gather slime gel for the Chrono Merchant.",
+      "quest_giver_name": "Chrono Merchant",
+      "objectives": [
+        {
+          "type": "CollectItem",
+          "target_id": "slime_gel",
+          "required_count": 5,
+          "description": "Collect slime gel"
+        }
+      ],
+      "rewards": {
+        "experience": 90,
+        "gold": 30,
+        "item_id": "health_potion"
+      }
+    },
+    {
+      "id": "quest_vault_watcher",
+      "title": "Vault Watcher",
+      "description": "Slay the Vault Warden in the Echo Vault dungeon.",
+      "quest_giver_name": "Vault Keeper",
+      "objectives": [
+        {
+          "type": "KillEnemy",
+          "target_id": "vault_warden",
+          "required_count": 1,
+          "description": "Defeat the Vault Warden"
+        }
+      ],
+      "rewards": {
+        "experience": 350,
+        "gold": 100,
+        "item_id": "echo_circlet"
+      }
+    },
+    {
+      "id": "quest_eye_of_time",
+      "title": "Eye of Time",
+      "description": "Hunt the wandering eyes in the outer biomes.",
+      "quest_giver_name": "Vault Keeper",
+      "objectives": [
+        {
+          "type": "KillEnemy",
+          "target_id": "eye",
+          "required_count": 2,
+          "description": "Defeat temporal eyes"
+        }
+      ],
+      "rewards": {
+        "experience": 150,
+        "gold": 35,
+        "item_id": "mana_potion"
+      }
     }
   ]
 }

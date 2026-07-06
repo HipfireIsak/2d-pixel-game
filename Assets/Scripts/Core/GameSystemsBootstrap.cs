@@ -1,7 +1,10 @@
 using UnityEngine;
 using AetherEcho.Combat;
 using AetherEcho.Content;
+using AetherEcho.Items;
+using AetherEcho.Persistence;
 using AetherEcho.Quests;
+using AetherEcho.Social;
 using AetherEcho.Vfx;
 using AetherEcho.World;
 
@@ -13,14 +16,28 @@ namespace AetherEcho.Core
         {
             EnsureComponent<SpellContentManager>();
             EnsureComponent<ClassContentManager>();
+            EnsureComponent<ItemContentManager>();
             EnsureComponent<SpellEngine>();
             EnsureComponent<SpellVfxPlayer>();
+            EnsureComponent<LootService>();
+            EnsureComponent<MobSpawnZoneManager>();
             EnsureComponent<QuestManager>();
+            EnsureComponent<CharacterPersistenceService>();
+            EnsureComponent<ChatManager>();
+            EnsureComponent<PartyManager>();
+            EnsureComponent<DungeonInstanceManager>();
             EnsureComponent<WorldContentSpawner>();
             EnsureComponent<UI.GameplayHud>();
             EnsureComponent<UI.SpellGroundTargeting>();
             EnsureComponent<UI.QuestDialogUI>();
             EnsureComponent<UI.MinimapUI>();
+            EnsureComponent<UI.ChatUI>();
+            EnsureComponent<UI.TargetSelectionController>();
+            EnsureComponent<UI.InventoryUI>();
+            EnsureComponent<UI.CharacterSheetUI>();
+            EnsureComponent<UI.PartyUI>();
+            EnsureComponent<UI.DeathScreenUI>();
+            EnsureComponent<UI.VendorUI>();
             DontDestroyOnLoad(gameObject);
         }
 

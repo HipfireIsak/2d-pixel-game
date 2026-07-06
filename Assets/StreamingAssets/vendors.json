@@ -1,0 +1,15 @@
+{
+  "vendors": [
+    {
+      "id": "chrono_merchant",
+      "display_name": "Chrono Merchant",
+      "stock": [
+        { "item_id": "health_potion", "price": 10 },
+        { "item_id": "mana_potion", "price": 10 },
+        { "item_id": "apprentice_staff", "price": 50 },
+        { "item_id": "chrono_robe", "price": 75 },
+        { "item_id": "echo_circlet", "price": 60 }
+      ]
+    }
+  ]
+}

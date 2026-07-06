@@ -106,6 +106,7 @@ MonoBehaviour:
   Agility: 10
   Experience: 0
   Gold: 0
+  IsDead: 0
 --- !u!114 &5944610507596755138
 MonoBehaviour:
   m_ObjectHideFlags: 0
