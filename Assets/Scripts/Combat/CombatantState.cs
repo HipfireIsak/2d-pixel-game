@@ -54,6 +54,7 @@ namespace AetherEcho.Combat
         private readonly Dictionary<string, float> cooldownEndTimes = new Dictionary<string, float>();
         private readonly Dictionary<string, float> activeStatusEffects = new Dictionary<string, float>();
         private float manaRegenAccumulator;
+        private float healthRegenAccumulator;
 
         public float GetCooldownRemainingSeconds(string spellId)
         {
@@ -107,7 +108,28 @@ namespace AetherEcho.Combat
             if (!IsDead)
             {
                 TickManaRegeneration();
+                TickHealthRegeneration();
             }
+        }
+
+        private void TickHealthRegeneration()
+        {
+            if (Relation == CombatRelation.Enemy || CurrentHealth >= MaxHealth)
+            {
+                return;
+            }
+
+            float regenPerSecond = GameConstants.BaseHealthRegenPerSecond
+                                   + Strength * GameConstants.HealthRegenPerStrength;
+            healthRegenAccumulator += regenPerSecond * Time.deltaTime;
+            if (healthRegenAccumulator < 1f)
+            {
+                return;
+            }
+
+            int restored = Mathf.FloorToInt(healthRegenAccumulator);
+            healthRegenAccumulator -= restored;
+            CurrentHealth = Mathf.Min(MaxHealth, CurrentHealth + restored);
         }
 
         private void TickManaRegeneration()
@@ -208,11 +230,33 @@ namespace AetherEcho.Combat
 
             CurrentHealth = Mathf.Max(0, CurrentHealth - damageAmount);
             ThreatMatrix.RegisterThreat(source, this, damageAmount, ThreatContributionKind.Damage);
+            NotifyAttackerHealthBarReveal(source);
 
             if (CurrentHealth <= 0)
             {
                 ServerHandleDeath();
             }
+        }
+
+        [Server]
+        private void NotifyAttackerHealthBarReveal(CombatantState source)
+        {
+            if (Relation != CombatRelation.Enemy || source == null)
+            {
+                return;
+            }
+
+            Player.NetworkedCombatant playerSource = source.GetComponent<Player.NetworkedCombatant>();
+            if (playerSource != null && playerSource.connectionToClient != null)
+            {
+                TargetRevealHealthBarFromSpell(playerSource.connectionToClient);
+            }
+        }
+
+        [TargetRpc]
+        private void TargetRevealHealthBarFromSpell(NetworkConnectionToClient _)
+        {
+            UI.EnemyHealthBarController.Instance?.RevealFromSpellHit(this);
         }
 
         [Server]

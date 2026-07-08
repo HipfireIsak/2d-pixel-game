@@ -33,7 +33,7 @@ namespace AetherEcho.UI
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.I) && !ChatUI.BlocksGameInput)
+            if (Input.GetKeyDown(KeyCode.B) && !ChatUI.BlocksGameInput)
             {
                 showInventory = !showInventory;
                 if (showInventory && !panelPositionInitialized)

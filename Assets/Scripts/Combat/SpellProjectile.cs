@@ -17,6 +17,7 @@ namespace AetherEcho.Combat
         private SpellData spellData;
         private CombatantState caster;
         private Vector3 direction;
+        private Vector3 previousGroundPosition;
         private float distanceTraveled;
         private float maxDistance = 12f;
         private bool hasHit;
@@ -47,6 +48,7 @@ namespace AetherEcho.Combat
             maxDistance = spell.targeting.range_meters;
             distanceTraveled = 0f;
             hasHit = false;
+            previousGroundPosition = FlatMovementUtility.SnapToGround(caster.transform.position);
 
             EnsureVisual(spell.id);
             Vector3 spawn = FlatMovementUtility.SnapToGround(caster.transform.position);
@@ -101,14 +103,17 @@ namespace AetherEcho.Combat
                 }
             }
 
+            Vector3 segmentStart = previousGroundPosition;
             Vector3 groundPos = FlatMovementUtility.SnapToGround(transform.position + direction * step);
             transform.position = groundPos + Vector3.up * 0.75f;
             distanceTraveled += step;
 
-            if (TryHitAlongPath(step))
+            if (TryHitAlongSegment(segmentStart, groundPos))
             {
                 return;
             }
+
+            previousGroundPosition = groundPos;
 
             if (distanceTraveled >= maxDistance)
             {
@@ -130,36 +135,104 @@ namespace AetherEcho.Combat
         }
 
         [Server]
-        private bool TryHitAlongPath(float stepDistance)
+        private bool TryHitAlongSegment(Vector3 segmentStart, Vector3 segmentEnd)
         {
-            Collider[] hits = Physics.OverlapSphere(transform.position, hitRadius);
-            foreach (Collider hit in hits)
+            float spellRadius = spellData != null && spellData.targeting.radius_meters > 0f
+                ? spellData.targeting.radius_meters
+                : hitRadius;
+            float hitReach = spellRadius + GameConstants.EnemyCollisionRadius;
+            float segmentLength = HorizontalDistance(segmentStart, segmentEnd);
+
+            CombatantState bestTarget = null;
+            float bestAlongDistance = float.MaxValue;
+            CombatantState[] combatants = FindObjectsOfType<CombatantState>();
+            foreach (CombatantState combatant in combatants)
             {
-                if (hit == null)
+                if (!IsValidProjectileTarget(combatant))
                 {
                     continue;
                 }
 
-                CombatantState combatant = hit.GetComponentInParent<CombatantState>();
-                if (combatant != null)
+                Vector3 enemyGround = FlatMovementUtility.SnapToGround(combatant.transform.position);
+                float distanceToSegment = DistancePointToSegmentXZ(
+                    enemyGround,
+                    segmentStart,
+                    segmentEnd,
+                    out float tAlong);
+                if (distanceToSegment > hitReach)
                 {
-                    if (combatant == caster || !combatant.IsEnemyWith(caster))
-                    {
-                        continue;
-                    }
-
-                    ServerResolveImpact(combatant.transform.position, combatant);
-                    return true;
+                    continue;
                 }
 
-                if (hit.gameObject.layer == GameConstants.ObstacleLayerIndex)
+                float alongDistance = tAlong * segmentLength;
+                if (alongDistance < bestAlongDistance)
                 {
-                    ServerResolveImpact(transform.position);
-                    return true;
+                    bestAlongDistance = alongDistance;
+                    bestTarget = combatant;
                 }
             }
 
+            if (bestTarget != null)
+            {
+                ServerResolveImpact(bestTarget.transform.position, bestTarget);
+                return true;
+            }
+
+            Vector3 castDelta = segmentEnd - segmentStart;
+            float castDistance = castDelta.magnitude;
+            if (castDistance > 0.001f
+                && Physics.SphereCast(
+                    segmentStart + Vector3.up * 0.5f,
+                    spellRadius * 0.5f,
+                    castDelta.normalized,
+                    out RaycastHit obstacleHit,
+                    castDistance,
+                    1 << GameConstants.ObstacleLayerIndex,
+                    QueryTriggerInteraction.Ignore))
+            {
+                ServerResolveImpact(obstacleHit.point);
+                return true;
+            }
+
             return false;
+        }
+
+        [Server]
+        private bool IsValidProjectileTarget(CombatantState combatant)
+        {
+            return combatant != null
+                   && combatant != caster
+                   && combatant.CurrentHealth > 0
+                   && combatant.IsEnemyWith(caster);
+        }
+
+        private static float HorizontalDistance(Vector3 from, Vector3 to)
+        {
+            from.y = 0f;
+            to.y = 0f;
+            return Vector3.Distance(from, to);
+        }
+
+        private static float DistancePointToSegmentXZ(
+            Vector3 point,
+            Vector3 segmentStart,
+            Vector3 segmentEnd,
+            out float tAlong)
+        {
+            Vector2 p = new Vector2(point.x, point.z);
+            Vector2 a = new Vector2(segmentStart.x, segmentStart.z);
+            Vector2 b = new Vector2(segmentEnd.x, segmentEnd.z);
+            Vector2 ab = b - a;
+            float abSqr = ab.sqrMagnitude;
+            if (abSqr < 0.0001f)
+            {
+                tAlong = 0f;
+                return Vector2.Distance(p, a);
+            }
+
+            tAlong = Mathf.Clamp01(Vector2.Dot(p - a, ab) / abSqr);
+            Vector2 closest = a + ab * tAlong;
+            return Vector2.Distance(p, closest);
         }
 
         [Server]

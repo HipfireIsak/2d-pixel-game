@@ -16,6 +16,8 @@ namespace AetherEcho.Core
 
         public const float BaseManaRegenPerSecond = 3.5f;
         public const float ManaRegenPerIntelligence = 0.15f;
+        public const float BaseHealthRegenPerSecond = 0.6f;
+        public const float HealthRegenPerStrength = 0.04f;
 
         public const float CameraPitchDegrees = 45f;
         public const float CameraYawDegrees = 0f;

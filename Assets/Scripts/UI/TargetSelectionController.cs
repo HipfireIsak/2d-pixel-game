@@ -73,6 +73,7 @@ namespace AetherEcho.UI
             {
                 selectedTarget = combatant;
                 selectedTargetNetId = combatant.netIdentity != null ? combatant.netIdentity.netId : 0;
+                EnemyHealthBarController.Instance?.SetTargetedEnemy(combatant);
                 GameplayHud.Instance?.SetToast("Target: " + combatant.CharacterClass);
             }
         }
@@ -81,6 +82,7 @@ namespace AetherEcho.UI
         {
             selectedTarget = null;
             selectedTargetNetId = 0;
+            EnemyHealthBarController.Instance?.ClearTargetedEnemy();
         }
 
         private void OnGUI()

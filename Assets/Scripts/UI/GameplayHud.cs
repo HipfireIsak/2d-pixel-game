@@ -39,7 +39,7 @@ namespace AetherEcho.UI
         private GUIStyle cooldownStyle;
         private GUIStyle questLogStyle;
         private GUIStyle frameStyle;
-        private GUIStyle statNumberStyle;
+        private static GUIStyle sharedStatNumberStyle;
 
         private bool showStatNumbers;
         private bool characterDockUnlocked;
@@ -113,7 +113,7 @@ namespace AetherEcho.UI
 
             GUI.Label(
                 new Rect(Screen.width - 460, Screen.height - 24, 440, 20),
-                "Click enemy to target | 1 Chrono-Blast | 2 Bolt | 3 Surge | Space Blink | H recall hub | Enter chat | I bag",
+                "Click enemy to target | 1 Chrono-Blast | 2 Bolt | 3 Surge | Space Blink | H recall hub | Enter chat | B bag",
                 bodyStyle);
 
             HudPanelCustomization.DrawContextMenu();
@@ -271,7 +271,7 @@ namespace AetherEcho.UI
             GUI.color = previous;
         }
 
-        private void DrawBar(Rect rect, int current, int max, Color fillColor, string statLabel = null)
+        public static void DrawBar(Rect rect, int current, int max, Color fillColor, string statLabel = null)
         {
             Color previous = GUI.color;
             GUI.color = new Color(0.12f, 0.12f, 0.14f, 0.95f);
@@ -284,8 +284,24 @@ namespace AetherEcho.UI
 
             if (!string.IsNullOrEmpty(statLabel))
             {
-                GUI.Label(rect, statLabel, statNumberStyle);
+                GUI.Label(rect, statLabel, GetSharedStatNumberStyle());
             }
+        }
+
+        private static GUIStyle GetSharedStatNumberStyle()
+        {
+            if (sharedStatNumberStyle == null)
+            {
+                sharedStatNumberStyle = new GUIStyle(GUI.skin.label)
+                {
+                    fontSize = 10,
+                    fontStyle = FontStyle.Bold,
+                    alignment = TextAnchor.MiddleCenter,
+                    normal = { textColor = Color.white }
+                };
+            }
+
+            return sharedStatNumberStyle;
         }
 
         private void EnsureStyles()
@@ -311,7 +327,7 @@ namespace AetherEcho.UI
                 alignment = TextAnchor.LowerCenter,
                 normal = { textColor = new Color(1f, 0.85f, 0.35f) }
             };
-            statNumberStyle = new GUIStyle(GUI.skin.label)
+            sharedStatNumberStyle = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 10,
                 fontStyle = FontStyle.Bold,

@@ -48,7 +48,7 @@ namespace AetherEcho.Enemies
         {
             enemyTypeId = typeId;
             int health = ResolveBaseHealth(typeId);
-            maxHealth = health + level * 10;
+            maxHealth = (health + level * 10) * 2;
             combatantState.CharacterClass = typeId;
             combatantState.Level = level;
             combatantState.MaxHealth = maxHealth;
