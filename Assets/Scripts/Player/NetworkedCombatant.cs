@@ -576,7 +576,18 @@ namespace AetherEcho.Player
         [Command]
         public void CmdSendChatMessage(string channel, string text)
         {
-            ChatManager.Instance?.ServerReceiveMessage(this, channel, text);
+            ChatDebug.Log(
+                "CmdSendChatMessage received on server netId=" + netId
+                + ", channel=" + channel
+                + ", text=\"" + text + "\""
+                + ", ChatManager.Instance=" + (ChatManager.Instance != null));
+            if (ChatManager.Instance == null)
+            {
+                ChatDebug.LogWarning("CmdSendChatMessage failed: ChatManager.Instance is null on server.");
+                return;
+            }
+
+            ChatManager.Instance.ServerReceiveMessage(this, channel, text);
         }
 
         [Command]
@@ -605,7 +616,17 @@ namespace AetherEcho.Player
         [TargetRpc]
         public void TargetReceiveChatMessage(NetworkConnectionToClient target, string channel, string senderName, string text)
         {
-            ChatManager.Instance?.ClientAppendMessage(channel, senderName, text);
+            ChatDebug.Log(
+                "TargetReceiveChatMessage on client [" + channel + "] "
+                + senderName + ": \"" + text + "\""
+                + ", ChatManager.Instance=" + (ChatManager.Instance != null));
+            if (ChatManager.Instance == null)
+            {
+                ChatDebug.LogWarning("TargetReceiveChatMessage failed: ChatManager.Instance is null on client.");
+                return;
+            }
+
+            ChatManager.Instance.ClientAppendMessage(channel, senderName, text);
         }
 
         [Command]

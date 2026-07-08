@@ -32,8 +32,15 @@ namespace AetherEcho.Social
         [Server]
         public void ServerReceiveMessage(NetworkedCombatant sender, string channel, string text)
         {
+            ChatDebug.Log(
+                "ServerReceiveMessage sender=" + (sender != null ? sender.DisplayName : "null")
+                + ", channel=" + channel
+                + ", text=\"" + text + "\""
+                + ", NetworkServer.active=" + NetworkServer.active);
+
             if (sender == null || string.IsNullOrWhiteSpace(text))
             {
+                ChatDebug.LogWarning("ServerReceiveMessage rejected: invalid sender or empty text.");
                 return;
             }
 
@@ -53,10 +60,12 @@ namespace AetherEcho.Social
 
             if (channel == "Say")
             {
+                ChatDebug.Log("Broadcasting Say message from " + message.senderName);
                 BroadcastSayMessage(sender.transform.position, message);
             }
             else
             {
+                ChatDebug.Log("Broadcasting Global message from " + message.senderName);
                 BroadcastGlobalMessage(message);
             }
         }
@@ -65,13 +74,16 @@ namespace AetherEcho.Social
         private void BroadcastGlobalMessage(ChatMessage message)
         {
             NetworkedCombatant[] players = FindObjectsOfType<NetworkedCombatant>();
+            ChatDebug.Log("BroadcastGlobalMessage to " + players.Length + " combatant(s)");
             foreach (NetworkedCombatant player in players)
             {
                 if (player.connectionToClient == null)
                 {
+                    ChatDebug.LogWarning("Skipping player netId=" + player.netId + ": no connectionToClient");
                     continue;
                 }
 
+                ChatDebug.Log("TargetReceiveChatMessage -> netId=" + player.netId + ", name=" + player.DisplayName);
                 player.TargetReceiveChatMessage(
                     player.connectionToClient,
                     message.channel,
@@ -113,6 +125,7 @@ namespace AetherEcho.Social
 
         public void ClientAppendMessage(string channel, string senderName, string text)
         {
+            ChatDebug.Log("ClientAppendMessage [" + channel + "] " + senderName + ": \"" + text + "\"");
             AppendMessage(new ChatMessage
             {
                 channel = channel,

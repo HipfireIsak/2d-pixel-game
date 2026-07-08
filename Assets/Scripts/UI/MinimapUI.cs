@@ -11,6 +11,14 @@ namespace AetherEcho.UI
         public static MinimapUI Instance { get; private set; }
 
         private NetworkedCombatant localPlayer;
+        private bool minimapUnlocked;
+        private Rect minimapRect;
+        private bool minimapRectInitialized;
+
+        private const float MapSize = 168f;
+        private const float MapMargin = 18f;
+        private const int MinimapDragControlId = 81002;
+
         private static readonly Color[] ChunkColors =
         {
             new Color(0.45f, 0.35f, 0.22f),
@@ -41,16 +49,19 @@ namespace AetherEcho.UI
                 return;
             }
 
-            const float size = 168f;
-            const float margin = 18f;
-            var mapRect = new Rect(Screen.width - size - margin, margin, size, size);
+            UpdateMinimapRect();
+            Rect mapRect = minimapRect;
             GUI.Box(mapRect, string.Empty);
+            if (minimapUnlocked)
+            {
+                GUI.Label(new Rect(mapRect.x, mapRect.y - 16f, mapRect.width, 14f), "Mini map (drag to move)", GUI.skin.label);
+            }
 
             float chunkSize = GameConstants.ChunkHalfExtentMeters * 2f;
             int grid = GameConstants.BiomeGridSize;
             float origin = -(grid * chunkSize * 0.5f) + (chunkSize * 0.5f);
             float worldSpan = grid * chunkSize;
-            float cell = size / grid;
+            float cell = MapSize / grid;
 
             for (int z = 0; z < grid; z++)
             {
@@ -75,8 +86,8 @@ namespace AetherEcho.UI
             float nz = (playerPos.z - origin + chunkSize * 0.5f) / worldSpan;
             nx = Mathf.Clamp01(nx);
             nz = Mathf.Clamp01(nz);
-            float dotX = mapRect.x + 2f + (nx * (size - 4f)) - 3f;
-            float dotY = mapRect.y + 2f + ((1f - nz) * (size - 4f)) - 3f;
+            float dotX = mapRect.x + 2f + (nx * (MapSize - 4f)) - 3f;
+            float dotY = mapRect.y + 2f + ((1f - nz) * (MapSize - 4f)) - 3f;
             Color dotPrevious = GUI.color;
             GUI.color = Color.white;
             GUI.DrawTexture(new Rect(dotX, dotY, 6f, 6f), Texture2D.whiteTexture);
@@ -85,13 +96,43 @@ namespace AetherEcho.UI
             Vector3 npcPos = new Vector3(-2f, 0f, -2f);
             float npcNx = (npcPos.x - origin + chunkSize * 0.5f) / worldSpan;
             float npcNz = (npcPos.z - origin + chunkSize * 0.5f) / worldSpan;
-            float npcX = mapRect.x + 2f + (Mathf.Clamp01(npcNx) * (size - 4f)) - 2f;
-            float npcY = mapRect.y + 2f + ((1f - Mathf.Clamp01(npcNz)) * (size - 4f)) - 2f;
+            float npcX = mapRect.x + 2f + (Mathf.Clamp01(npcNx) * (MapSize - 4f)) - 2f;
+            float npcY = mapRect.y + 2f + ((1f - Mathf.Clamp01(npcNz)) * (MapSize - 4f)) - 2f;
             GUI.color = new Color(1f, 0.85f, 0.2f);
             GUI.DrawTexture(new Rect(npcX, npcY, 4f, 4f), Texture2D.whiteTexture);
             GUI.color = dotPrevious;
 
-            GUI.Label(new Rect(mapRect.x, mapRect.y + size + 2f, size, 18f), "Map (9 biomes)", GUI.skin.label);
+            GUI.Label(new Rect(mapRect.x, mapRect.y + MapSize + 2f, MapSize, 18f), "Map (9 biomes)", GUI.skin.label);
+
+            var interactionRect = new Rect(mapRect.x, mapRect.y - (minimapUnlocked ? 16f : 0f), mapRect.width, mapRect.height + (minimapUnlocked ? 16f : 0f) + 20f);
+            HudPanelCustomization.TryOpenContextMenu(interactionRect, GetMinimapMenuItems());
+            HudPanelCustomization.HandleDrag(ref minimapRect, minimapUnlocked, MinimapDragControlId);
+            HudPanelCustomization.DrawContextMenu();
+        }
+
+        private void UpdateMinimapRect()
+        {
+            if (!minimapRectInitialized)
+            {
+                minimapRect = new Rect(Screen.width - MapSize - MapMargin, MapMargin, MapSize, MapSize);
+                minimapRectInitialized = true;
+            }
+
+            if (!minimapUnlocked)
+            {
+                minimapRect.x = Screen.width - MapSize - MapMargin;
+                minimapRect.y = MapMargin;
+            }
+        }
+
+        private HudPanelCustomization.MenuItem[] GetMinimapMenuItems()
+        {
+            return new[]
+            {
+                new HudPanelCustomization.MenuItem(
+                    minimapUnlocked ? "Lock Mini map" : "Unlock Mini map",
+                    () => minimapUnlocked = !minimapUnlocked)
+            };
         }
     }
 }

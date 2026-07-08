@@ -39,6 +39,13 @@ namespace AetherEcho.UI
         private GUIStyle cooldownStyle;
         private GUIStyle questLogStyle;
         private GUIStyle frameStyle;
+        private GUIStyle statNumberStyle;
+
+        private bool showStatNumbers;
+        private bool characterDockUnlocked;
+        private Rect characterDockRect = new Rect(16f, 16f, 240f, 92f);
+
+        private const int CharacterDockDragControlId = 81001;
 
         private void Awake()
         {
@@ -108,16 +115,68 @@ namespace AetherEcho.UI
                 new Rect(Screen.width - 460, Screen.height - 24, 440, 20),
                 "Click enemy to target | 1 Chrono-Blast | 2 Bolt | 3 Surge | Space Blink | H recall hub | Enter chat | I bag",
                 bodyStyle);
+
+            HudPanelCustomization.DrawContextMenu();
         }
 
         private void DrawPlayerFrame(CombatantState combatant)
         {
-            var frame = new Rect(16, 16, 240, 92);
+            if (!characterDockUnlocked)
+            {
+                characterDockRect.x = 16f;
+                characterDockRect.y = 16f;
+                characterDockRect.height = 92f;
+            }
+            else
+            {
+                characterDockRect.height = 104f;
+            }
+
+            Rect frame = characterDockRect;
             GUI.Box(frame, string.Empty, frameStyle);
-            GUI.Label(new Rect(24, 22, 220, 22), combatant.CharacterClass + "  Lv." + combatant.Level, titleStyle);
-            DrawBar(new Rect(24, 46, 220, 16), combatant.CurrentHealth, combatant.MaxHealth, new Color(0.85f, 0.2f, 0.25f));
-            DrawBar(new Rect(24, 66, 220, 16), combatant.CurrentMana, combatant.MaxMana, new Color(0.25f, 0.55f, 1f));
-            GUI.Label(new Rect(24, 86, 220, 18), "Gold " + combatant.Gold, bodyStyle);
+            if (characterDockUnlocked)
+            {
+                GUI.Label(new Rect(frame.x + 8f, frame.y + 2f, frame.width - 16f, 14f), "Character dock (drag to move)", spellMetaStyle);
+            }
+
+            float contentX = frame.x + 8f;
+            float titleY = frame.y + (characterDockUnlocked ? 16f : 6f);
+            float barWidth = frame.width - 16f;
+            float barHeight = 16f;
+            float healthBarY = titleY + 24f;
+            float manaBarY = healthBarY + 20f;
+            float goldY = manaBarY + 20f;
+
+            GUI.Label(new Rect(contentX, titleY, barWidth, 22f), combatant.CharacterClass + "  Lv." + combatant.Level, titleStyle);
+            DrawBar(
+                new Rect(contentX, healthBarY, barWidth, barHeight),
+                combatant.CurrentHealth,
+                combatant.MaxHealth,
+                new Color(0.85f, 0.2f, 0.25f),
+                showStatNumbers ? combatant.CurrentHealth + " / " + combatant.MaxHealth : null);
+            DrawBar(
+                new Rect(contentX, manaBarY, barWidth, barHeight),
+                combatant.CurrentMana,
+                combatant.MaxMana,
+                new Color(0.25f, 0.55f, 1f),
+                showStatNumbers ? combatant.CurrentMana + " / " + combatant.MaxMana : null);
+            GUI.Label(new Rect(contentX, goldY, barWidth, 18f), "Gold " + combatant.Gold, bodyStyle);
+
+            HudPanelCustomization.TryOpenContextMenu(frame, GetCharacterDockMenuItems());
+            HudPanelCustomization.HandleDrag(ref characterDockRect, characterDockUnlocked, CharacterDockDragControlId);
+        }
+
+        private HudPanelCustomization.MenuItem[] GetCharacterDockMenuItems()
+        {
+            return new[]
+            {
+                new HudPanelCustomization.MenuItem(
+                    showStatNumbers ? "Hide stat numbers" : "Show stat numbers",
+                    () => showStatNumbers = !showStatNumbers),
+                new HudPanelCustomization.MenuItem(
+                    characterDockUnlocked ? "Lock Character dock" : "Unlock Character dock",
+                    () => characterDockUnlocked = !characterDockUnlocked)
+            };
         }
 
         private void DrawQuestTrackerPanel()
@@ -212,15 +271,21 @@ namespace AetherEcho.UI
             GUI.color = previous;
         }
 
-        private void DrawBar(Rect rect, int current, int max, Color fillColor)
+        private void DrawBar(Rect rect, int current, int max, Color fillColor, string statLabel = null)
         {
-            GUI.Box(rect, string.Empty, barBackStyle);
-            float fillWidth = max > 0 ? rect.width * (current / (float)max) : 0f;
-            var fillRect = new Rect(rect.x + 2, rect.y + 2, Mathf.Max(0f, fillWidth - 4f), rect.height - 4f);
             Color previous = GUI.color;
+            GUI.color = new Color(0.12f, 0.12f, 0.14f, 0.95f);
+            GUI.DrawTexture(rect, Texture2D.whiteTexture);
+            float fillWidth = max > 0 ? rect.width * (current / (float)max) : 0f;
+            var fillRect = new Rect(rect.x + 2f, rect.y + 2f, Mathf.Max(0f, fillWidth - 4f), rect.height - 4f);
             GUI.color = fillColor;
-            GUI.Box(fillRect, string.Empty, barFillStyle);
+            GUI.DrawTexture(fillRect, Texture2D.whiteTexture);
             GUI.color = previous;
+
+            if (!string.IsNullOrEmpty(statLabel))
+            {
+                GUI.Label(rect, statLabel, statNumberStyle);
+            }
         }
 
         private void EnsureStyles()
@@ -245,6 +310,13 @@ namespace AetherEcho.UI
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.LowerCenter,
                 normal = { textColor = new Color(1f, 0.85f, 0.35f) }
+            };
+            statNumberStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 10,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter,
+                normal = { textColor = Color.white }
             };
         }
     }
