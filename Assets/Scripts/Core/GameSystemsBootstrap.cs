@@ -34,6 +34,7 @@ namespace AetherEcho.Core
             EnsureComponent<UI.ChatUI>();
             EnsureComponent<UI.TargetSelectionController>();
             EnsureComponent<UI.EnemyHealthBarController>();
+            EnsureComponent<UI.QuestNpcIndicatorUI>();
             EnsureComponent<UI.InventoryUI>();
             EnsureComponent<UI.CharacterSheetUI>();
             EnsureComponent<UI.PartyUI>();

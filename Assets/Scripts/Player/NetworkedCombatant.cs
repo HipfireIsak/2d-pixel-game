@@ -504,6 +504,12 @@ namespace AetherEcho.Player
             GameplayHud.Instance?.SetQuestTracker(trackerText, readyToTurnIn);
         }
 
+        [ClientRpc]
+        public void RpcSyncQuestClientState(string activeQuestId, bool objectivesComplete, string completedQuestIdsCsv)
+        {
+            Quests.QuestClientState.Apply(activeQuestId, objectivesComplete, completedQuestIdsCsv);
+        }
+
         public bool TryLocalCast(string spellId, Vector3 targetPoint, Vector3 aimDirection, out string failureReason, uint targetNetId = 0)
         {
             failureReason = string.Empty;

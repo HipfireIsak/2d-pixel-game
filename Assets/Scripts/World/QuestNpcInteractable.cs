@@ -9,6 +9,8 @@ namespace AetherEcho.World
         [SerializeField] private string questGiverName = "Chrono Sage";
         [SerializeField] private float interactRadiusMeters = 2.8f;
 
+        public string QuestGiverName => questGiverName;
+
         public void Configure(string giverName)
         {
             questGiverName = giverName;

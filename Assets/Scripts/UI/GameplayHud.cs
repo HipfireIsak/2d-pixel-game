@@ -43,6 +43,7 @@ namespace AetherEcho.UI
 
         private bool showStatNumbers;
         private bool characterDockUnlocked;
+        private bool characterDockRectInitialized;
         private Rect characterDockRect = new Rect(16f, 16f, 240f, 92f);
 
         private const int CharacterDockDragControlId = 81001;
@@ -71,6 +72,11 @@ namespace AetherEcho.UI
             toastTimer = 3f;
         }
 
+        public void ToggleQuestLog()
+        {
+            showQuestLog = !showQuestLog;
+        }
+
         private void Update()
         {
             if (toastTimer > 0f)
@@ -80,7 +86,7 @@ namespace AetherEcho.UI
 
             if (Input.GetKeyDown(KeyCode.J))
             {
-                showQuestLog = !showQuestLog;
+                ToggleQuestLog();
             }
         }
 
@@ -121,16 +127,13 @@ namespace AetherEcho.UI
 
         private void DrawPlayerFrame(CombatantState combatant)
         {
-            if (!characterDockUnlocked)
+            if (!characterDockRectInitialized)
             {
-                characterDockRect.x = 16f;
-                characterDockRect.y = 16f;
-                characterDockRect.height = 92f;
+                characterDockRect = new Rect(16f, 16f, 240f, 92f);
+                characterDockRectInitialized = true;
             }
-            else
-            {
-                characterDockRect.height = 104f;
-            }
+
+            characterDockRect.height = characterDockUnlocked ? 104f : 92f;
 
             Rect frame = characterDockRect;
             GUI.Box(frame, string.Empty, frameStyle);

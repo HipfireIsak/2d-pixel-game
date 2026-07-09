@@ -25,7 +25,34 @@ namespace AetherEcho.World
             DestroyLegacyWorldObjects();
             BuildEnvironment();
             RegisterAreaSpawnZones();
+            RegisterEyeHuntingGrounds();
             SpawnHubNpcs();
+        }
+
+        private static void RegisterEyeHuntingGrounds()
+        {
+            if (MobSpawnZoneManager.Instance == null)
+            {
+                return;
+            }
+
+            string[] eyesOnly = { "eye" };
+            MobSpawnZoneManager.Instance.RegisterZone(
+                new Vector3(160f, 0f, 160f),
+                44f,
+                eyesOnly,
+                6,
+                GameConstants.MobRespawnSecondsDefault,
+                3,
+                5);
+            MobSpawnZoneManager.Instance.RegisterZone(
+                new Vector3(160f, 0f, -160f),
+                44f,
+                eyesOnly,
+                4,
+                GameConstants.MobRespawnSecondsDefault,
+                3,
+                5);
         }
 
         private void RegisterAreaSpawnZones()

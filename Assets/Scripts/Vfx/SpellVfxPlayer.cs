@@ -1,3 +1,4 @@
+using Mirror;
 using UnityEngine;
 using AetherEcho.Core;
 using AetherEcho.Rendering;
@@ -7,6 +8,9 @@ namespace AetherEcho.Vfx
     public class SpellVfxPlayer : MonoBehaviour
     {
         public static SpellVfxPlayer Instance { get; private set; }
+
+        private static readonly Color XpSoulColor = new Color(0.62f, 0.22f, 0.98f, 0.95f);
+        private static readonly Color XpAbsorbColor = new Color(0.72f, 0.35f, 1f, 0.85f);
 
         private void Awake()
         {
@@ -45,6 +49,72 @@ namespace AetherEcho.Vfx
             Sprite characterSprite = art != null ? art.GetEnemySprite(enemyTypeId) : null;
             Sprite burstSprite = art != null ? art.spellBurst : null;
             StartCoroutine(PlayEnemyDeathExplosion(position, characterSprite, burstSprite, tint));
+        }
+
+        public void PlayXpSoulCollect(Vector3 origin, uint recipientNetId)
+        {
+            ArtCatalog art = ArtAssetResolver.Catalog;
+            Sprite soulSprite = art != null ? art.spellPulse : null;
+            StartCoroutine(PlayXpSoulCollectRoutine(origin, recipientNetId, soulSprite));
+        }
+
+        private System.Collections.IEnumerator PlayXpSoulCollectRoutine(
+            Vector3 origin,
+            uint recipientNetId,
+            Sprite soulSprite)
+        {
+            Vector3 start = origin + Vector3.up * 0.55f;
+            GameObject soul = CreateSpriteFx("XpSoul", soulSprite, XpSoulColor, 0.75f);
+            soul.transform.position = start;
+            soul.AddComponent<CameraBillboard>();
+
+            const float duration = 0.72f;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.SmoothStep(0f, 1f, elapsed / duration);
+                Vector3 end = ResolveNetworkedPosition(recipientNetId, 0.65f);
+                if (end == Vector3.zero)
+                {
+                    break;
+                }
+
+                Vector3 mid = Vector3.Lerp(start, end, 0.5f) + Vector3.up * 2.2f;
+                Vector3 position = EvaluateQuadraticBezier(start, mid, end, t);
+                soul.transform.position = position;
+                soul.transform.localScale = Vector3.one * Mathf.Lerp(0.75f, 0.42f, t);
+                SetAlpha(soul, Mathf.Lerp(0.95f, 0.7f, t));
+                CameraBillboard.Apply(soul.transform, lockYAxis: true);
+                yield return null;
+            }
+
+            Vector3 absorbPoint = ResolveNetworkedPosition(recipientNetId, 0.55f);
+            Destroy(soul);
+            if (absorbPoint != Vector3.zero)
+            {
+                yield return PlayPulse(absorbPoint, soulSprite, XpAbsorbColor, 1.6f);
+            }
+        }
+
+        private static Vector3 EvaluateQuadraticBezier(Vector3 start, Vector3 control, Vector3 end, float t)
+        {
+            float oneMinusT = 1f - t;
+            return (oneMinusT * oneMinusT * start)
+                   + (2f * oneMinusT * t * control)
+                   + (t * t * end);
+        }
+
+        private static Vector3 ResolveNetworkedPosition(uint netId, float heightOffset)
+        {
+            if (!NetworkClient.active || !NetworkClient.spawned.TryGetValue(netId, out NetworkIdentity identity) || identity == null)
+            {
+                return Vector3.zero;
+            }
+
+            Vector3 position = identity.transform.position;
+            position.y += heightOffset;
+            return position;
         }
 
         private System.Collections.IEnumerator PlayEnemyDeathExplosion(

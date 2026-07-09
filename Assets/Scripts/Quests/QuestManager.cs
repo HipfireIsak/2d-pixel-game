@@ -393,6 +393,21 @@ namespace AetherEcho.Quests
             activeQuestByPlayerNetId.TryGetValue(netId, out QuestProgress progress);
             player.RpcUpdateQuestHud(BuildHudText(netId));
             player.RpcUpdateQuestTracker(BuildTrackerText(netId), progress?.objectivesComplete ?? false);
+            player.RpcSyncQuestClientState(
+                progress?.questId ?? string.Empty,
+                progress?.objectivesComplete ?? false,
+                BuildCompletedQuestCsv(netId));
+        }
+
+        private string BuildCompletedQuestCsv(uint playerNetId)
+        {
+            if (!completedQuestsByPlayer.TryGetValue(playerNetId, out HashSet<string> completed)
+                || completed.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join("|", completed);
         }
 
         private string BuildHudText(uint playerNetId)
@@ -415,7 +430,7 @@ namespace AetherEcho.Quests
 
             return "[Active] " + quest.title + "  "
                    + progress.currentCount + "/" + (objective?.required_count ?? 1)
-                   + "  " + (objective?.description ?? quest.description);
+                   + " — " + QuestLocationResolver.ResolveLocationLabel(progress.questId, false);
         }
 
         private string BuildTrackerText(uint playerNetId)
@@ -431,10 +446,14 @@ namespace AetherEcho.Quests
             }
 
             QuestObjectiveDefinition objective = quest.objectives.Count > 0 ? quest.objectives[0] : null;
-            string status = progress.objectivesComplete ? "Complete — turn in at Sage" : "In progress";
+            string status = progress.objectivesComplete
+                ? "Complete — turn in at " + quest.quest_giver_name
+                : "In progress";
+            string location = QuestLocationResolver.ResolveLocationLabel(progress.questId, progress.objectivesComplete);
             return quest.title + "\n" + status + "\n"
                    + (objective?.description ?? quest.description) + " "
-                   + progress.currentCount + "/" + (objective?.required_count ?? 1);
+                   + progress.currentCount + "/" + (objective?.required_count ?? 1)
+                   + "\n" + location;
         }
     }
 }

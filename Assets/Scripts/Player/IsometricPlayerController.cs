@@ -167,6 +167,11 @@ namespace AetherEcho.Player
             if (Input.GetMouseButtonDown(1)
                 && (SpellGroundTargeting.Instance == null || !SpellGroundTargeting.Instance.IsTargeting))
             {
+                if (NpcInteractUtility.TryInteractWithQuestNpcAtCursor(transform.position))
+                {
+                    return;
+                }
+
                 TryPickupLootUnderCursor();
             }
         }
@@ -276,8 +281,8 @@ namespace AetherEcho.Player
 
         private void TryCastBlink()
         {
-            Vector3 aimDirection = GetCursorWorldDirection();
-            Vector3 targetPoint = transform.position + aimDirection.normalized * GameConstants.PlayerMoveSpeedMetersPerSecond;
+            Vector3 aimDirection = GetMovementAimDirection();
+            Vector3 targetPoint = transform.position + aimDirection * GameConstants.BlinkRangeMeters;
             if (!networkedCombatant.TryLocalCast(
                     GameConstants.SpellChronoBlink,
                     targetPoint,
@@ -287,6 +292,21 @@ namespace AetherEcho.Player
             {
                 GameplayHud.Instance?.SetToast(failureReason);
             }
+        }
+
+        private Vector3 GetMovementAimDirection()
+        {
+            float horizontal = Input.GetAxisRaw("Horizontal");
+            float vertical = Input.GetAxisRaw("Vertical");
+            Vector3 input = new Vector3(horizontal, 0f, vertical);
+            if (input.sqrMagnitude > 0.001f)
+            {
+                return TransformInputRelativeToCamera(input.normalized);
+            }
+
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+            return forward.sqrMagnitude > 0.001f ? forward.normalized : Vector3.forward;
         }
 
         public void FaceAimDirection(Vector3 aimDirection)
@@ -302,29 +322,6 @@ namespace AetherEcho.Player
                 transform.rotation,
                 targetRotation,
                 rotationSpeedDegreesPerSecond * Time.deltaTime);
-        }
-
-        private Vector3 GetCursorWorldDirection()
-        {
-            Camera activeCamera = cameraRig != null && cameraRig.TargetCamera != null
-                ? cameraRig.TargetCamera
-                : (playerCamera != null ? playerCamera : CombatPickUtility.ResolveGameplayCamera());
-            if (activeCamera == null)
-            {
-                return transform.forward;
-            }
-
-            if (CombatPickUtility.TryGetGroundPointUnderCursor(activeCamera, Input.mousePosition, out Vector3 groundPoint))
-            {
-                Vector3 direction = groundPoint - transform.position;
-                direction.y = 0f;
-                if (direction.sqrMagnitude > 0.001f)
-                {
-                    return direction.normalized;
-                }
-            }
-
-            return transform.forward;
         }
 
         private Vector3 TransformInputRelativeToCamera(Vector3 input)

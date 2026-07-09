@@ -79,7 +79,7 @@
     {
       "id": "quest_eye_of_time",
       "title": "Eye of Time",
-      "description": "Hunt the wandering eyes in the outer biomes.",
+      "description": "Travel to the southeast stone biome (bottom-right minimap cell) and defeat the floating red eye enemies.",
       "quest_giver_name": "Vault Keeper",
       "objectives": [
         {

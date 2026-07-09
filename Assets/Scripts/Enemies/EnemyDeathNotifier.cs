@@ -46,11 +46,19 @@ namespace AetherEcho.Enemies
             CombatantState killer = ThreatMatrix.GetHighestThreatTarget(combatantState);
             if (killer != null && networkedEnemy != null)
             {
+                int experienceReward = networkedEnemy.ResolveKillExperience();
+                killer.ServerGrantExperience(experienceReward);
                 networkedEnemy.ServerNotifyKilledBy(killer);
                 Items.LootService.Instance?.ServerGrantKillLoot(killer, enemyTypeId, deathPosition);
                 if (netIdentity != null)
                 {
                     World.MobSpawnZoneManager.Instance?.ServerNotifyEnemyDestroyed(netIdentity.netId);
+                }
+
+                uint killerNetId = killer.netIdentity != null ? killer.netIdentity.netId : 0;
+                if (killerNetId != 0)
+                {
+                    RpcPlayXpSoul(deathPosition, killerNetId);
                 }
             }
 
@@ -70,6 +78,12 @@ namespace AetherEcho.Enemies
         {
             HideEnemyVisual();
             SpellVfxPlayer.Instance?.PlayEnemyDeathExplosion(position, enemyTypeId, tint);
+        }
+
+        [ClientRpc]
+        private void RpcPlayXpSoul(Vector3 origin, uint recipientNetId)
+        {
+            SpellVfxPlayer.Instance?.PlayXpSoulCollect(origin, recipientNetId);
         }
 
         private void HideEnemyVisual()

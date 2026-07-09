@@ -29,6 +29,25 @@ namespace AetherEcho.Enemies
         public string EnemyTypeId => enemyTypeId;
         public CombatantState Combatant => combatantState;
 
+        public int ResolveKillExperience()
+        {
+            int level = combatantState != null ? combatantState.Level : 1;
+            return ResolveBaseKillExperience(enemyTypeId) + level * 2;
+        }
+
+        private static int ResolveBaseKillExperience(string typeId)
+        {
+            switch (typeId)
+            {
+                case "vault_warden": return 90;
+                case "skeleton": return 16;
+                case "bat": return 10;
+                case "eye": return 12;
+                case "sunflower": return 11;
+                default: return 10;
+            }
+        }
+
         private void Awake()
         {
             combatantState = GetComponent<CombatantState>();

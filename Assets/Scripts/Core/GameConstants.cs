@@ -44,6 +44,7 @@ namespace AetherEcho.Core
         public const string SpellTemporalBolt = "sp_temporal_bolt";
         public const string SpellManaSurge = "sp_mana_surge";
         public const string SpellChronoBlink = "sp_chrono_blink";
+        public const float BlinkRangeMeters = 7f;
 
         public const float MovementBlockingCastTimeSeconds = 0.5f;
         public const float MobRespawnSecondsDefault = 12f;
