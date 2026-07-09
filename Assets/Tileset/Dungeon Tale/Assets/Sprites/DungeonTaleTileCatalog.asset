@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd44216b44d013641b5b1e598a9f434d, type: 3}
+  m_Name: DungeonTaleTileCatalog
+  m_EditorClassIdentifier: 
+  tileMaterial: {fileID: 0}
+  cellSize: {x: 1.25, y: 1.4375, z: 0}
+  floorGreen: {fileID: 0}
+  floorWood: {fileID: 0}
+  floorDirt: {fileID: 0}
+  floorRed: {fileID: 0}
+  floorMetal: {fileID: 0}
+  floorFlash: {fileID: 0}
+  wall: {fileID: 0}
+  carpet: {fileID: 0}

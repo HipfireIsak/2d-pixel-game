@@ -125,19 +125,35 @@ namespace AetherEcho.World
             CreateFloorTile(root.transform, new Vector3(0f, 0f, 0f), 16f);
             CreateFloorTile(root.transform, new Vector3(0f, 0f, 8f), 12f);
 
+            ArtCatalog art = ArtAssetResolver.Catalog;
+            Sprite exitSprite = art != null ? (art.spellPulse != null ? art.spellPulse : art.timeEcho) : null;
             var exitCrystal = WorldPropBuilder.CreateBillboardProp(
                 root.transform,
                 "VaultExitCrystal",
-                ArtAssetResolver.Catalog != null ? ArtAssetResolver.Catalog.questNpc : null,
+                exitSprite,
                 new Vector3(0f, 0f, 10f),
-                GameConstants.PlayerVisualScale * 0.8f,
+                GameConstants.PlayerVisualScale * 1.1f,
                 addObstacleCollider: false,
                 isTree: false,
                 facingMode: Rendering.SpriteFacingMode.FixedSouth);
+            PixelBillboardVisual exitVisual = exitCrystal.GetComponent<PixelBillboardVisual>();
+            if (exitVisual != null && exitVisual.SpriteRenderer != null)
+            {
+                exitVisual.SpriteRenderer.color = new Color(0.45f, 0.95f, 1f, 1f);
+            }
+
             exitCrystal.AddComponent<DungeonExitInteractable>();
+            InteractableWorldHint exitHint = exitCrystal.AddComponent<InteractableWorldHint>();
+            exitHint.Configure("[E] Return to Hub");
             SphereCollider exitCollider = exitCrystal.AddComponent<SphereCollider>();
             exitCollider.radius = 1.2f;
             exitCollider.isTrigger = true;
+
+            ArtCatalog artForDecor = ArtAssetResolver.Catalog;
+            if (artForDecor != null)
+            {
+                DungeonDecorBuilder.BuildEchoVaultDecor(root.transform, artForDecor);
+            }
         }
 
         [Server]
@@ -154,6 +170,8 @@ namespace AetherEcho.World
             if (boss != null)
             {
                 boss.gameObject.name = "VaultWarden";
+                VaultWardenBossController controller = boss.gameObject.AddComponent<VaultWardenBossController>();
+                controller.ServerInitialize();
             }
         }
 

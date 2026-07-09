@@ -25,6 +25,104 @@ namespace AetherEcho.World
             return null;
         }
 
+        public static bool TryHandleNearestInteractableOnKey(Vector3 playerPosition)
+        {
+            if (QuestDialogUI.Instance != null && QuestDialogUI.Instance.IsOpen)
+            {
+                return false;
+            }
+
+            if (VendorUI.Instance != null && VendorUI.Instance.IsOpen)
+            {
+                return false;
+            }
+
+            NetworkedCombatant localPlayer = FindLocalPlayer();
+            if (localPlayer == null)
+            {
+                return false;
+            }
+
+            float bestDistance = float.MaxValue;
+            DungeonExitInteractable bestExit = null;
+            DungeonPortalInteractable bestPortal = null;
+            QuestNpcInteractable bestQuestNpc = null;
+
+            DungeonExitInteractable[] exits = Object.FindObjectsOfType<DungeonExitInteractable>();
+            foreach (DungeonExitInteractable exit in exits)
+            {
+                if (exit == null)
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(playerPosition, exit.transform.position);
+                if (distance <= QuestGiverInteractRadiusMeters && distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestExit = exit;
+                    bestPortal = null;
+                    bestQuestNpc = null;
+                }
+            }
+
+            DungeonPortalInteractable[] portals = Object.FindObjectsOfType<DungeonPortalInteractable>();
+            foreach (DungeonPortalInteractable portal in portals)
+            {
+                if (portal == null)
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(playerPosition, portal.transform.position);
+                if (distance <= QuestGiverInteractRadiusMeters && distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestExit = null;
+                    bestPortal = portal;
+                    bestQuestNpc = null;
+                }
+            }
+
+            QuestNpcInteractable[] questNpcs = Object.FindObjectsOfType<QuestNpcInteractable>();
+            foreach (QuestNpcInteractable questNpc in questNpcs)
+            {
+                if (questNpc == null)
+                {
+                    continue;
+                }
+
+                float distance = Vector3.Distance(playerPosition, questNpc.transform.position);
+                if (distance <= QuestGiverInteractRadiusMeters && distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    bestExit = null;
+                    bestPortal = null;
+                    bestQuestNpc = questNpc;
+                }
+            }
+
+            if (bestExit != null)
+            {
+                localPlayer.CmdExitDungeon();
+                return true;
+            }
+
+            if (bestPortal != null)
+            {
+                localPlayer.CmdEnterDungeon();
+                return true;
+            }
+
+            if (bestQuestNpc != null)
+            {
+                localPlayer.CmdInteractWithQuestNpc(bestQuestNpc.QuestGiverName);
+                return true;
+            }
+
+            return false;
+        }
+
         public static bool TryInteractWithQuestNpcAtCursor(Vector3 playerPosition)
         {
             if (QuestDialogUI.Instance != null && QuestDialogUI.Instance.IsOpen)

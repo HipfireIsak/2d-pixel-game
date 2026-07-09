@@ -51,7 +51,7 @@ namespace AetherEcho.EditorTools
             GameObject snakePrefab = CreateEnemyPrefab("snake", "Assets/Resources/Enemies/snake.prefab", artCatalog.snake);
             GameObject eyePrefab = CreateEnemyPrefab("eye", "Assets/Resources/Enemies/eye.prefab", artCatalog.eye);
             GameObject sunflowerPrefab = CreateEnemyPrefab("sunflower", "Assets/Resources/Enemies/sunflower.prefab", artCatalog.sunflower);
-            GameObject vaultWardenPrefab = CreateEnemyPrefab("vault_warden", "Assets/Resources/Enemies/vault_warden.prefab", artCatalog.skeleton);
+            GameObject vaultWardenPrefab = CreateEnemyPrefab("vault_warden", "Assets/Resources/Enemies/vault_warden.prefab", artCatalog.vaultWarden != null ? artCatalog.vaultWarden : artCatalog.skeleton);
             GameObject spellProjectilePrefab = CreateSpellProjectilePrefab();
             GameObject groundLootPrefab = CreateGroundLootPrefab();
             GameObject playerPrefab = CreatePlayerPrefab(artCatalog);
@@ -116,8 +116,245 @@ namespace AetherEcho.EditorTools
             catalog.spellBurst = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_10");
             catalog.spellPulse = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_0");
             catalog.timeEcho = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_15");
+
+            WireBossAndQuestUi(catalog, atlas);
+            WireAnimatedProps(catalog);
+            WireWaterAndVfx(catalog);
+            WireWallsAndDecals(catalog, atlas);
+            WireDungeonTaleEnvironment(catalog, atlas);
+            WireMedievalDungeonProps(catalog);
+            WireExternalTilesets(catalog);
+
             EditorUtility.SetDirty(catalog);
             return catalog;
+        }
+
+        private static void WireBossAndQuestUi(ArtCatalog catalog, string atlas)
+        {
+            catalog.vaultWarden = LoadSprite(atlas, "Prop_Env_X");
+            catalog.heartBoss = LoadSprite(atlas, "Char_Heat");
+            catalog.questBubbleAvailable = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Bubbles.png", "Bubbles_5");
+            catalog.questBubbleTurnIn = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Bubbles.png", "Bubbles_8");
+            catalog.questBubbleThinking = LoadSprites(
+                "Assets/Tileset/Dungeon Tale/Assets/Sprites/Bubbles.png",
+                "Bubbles_10",
+                "Bubbles_11",
+                "Bubbles_12",
+                "Bubbles_13");
+        }
+
+        private static void WireAnimatedProps(ArtCatalog catalog)
+        {
+            catalog.torchFrames = LoadSpriteSequence("Assets/Tileset/Dungeon Tale/Assets/Sprites/Torch.png", "Torch_", 1, 7);
+            catalog.spikeTrapFrames = LoadAllSpritesFromTexture("Assets/Tileset/Dungeon Tale/Assets/Sprites/Spikes.png");
+        }
+
+        private static void WireWaterAndVfx(ArtCatalog catalog)
+        {
+            const string atlas = "Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png";
+            catalog.waterFloorTile = LoadSprite(atlas, "Floor_C");
+            catalog.waterCausticFrames = LoadAllSpritesFromTexture("Assets/Free Asset - 2D Handcrafted Art/Sprite/WaterCausticSprite.psd");
+            catalog.vfxWaterDrop = LoadSprite("Assets/Free Asset - 2D Handcrafted Art/Sprite/WaterDrop.png");
+            catalog.vfxWaterRipple = LoadSprite("Assets/Tileset/Dungeon Tale/Assets/Sprites/Fx.png", "Fx_2");
+            catalog.vfxDustFrames = LoadAllSpritesFromTexture("Assets/Free Asset - 2D Handcrafted Art/Sprite/Dust1.psd");
+            catalog.vfxFogFrames = LoadAllSpritesFromTexture("Assets/Free Asset - 2D Handcrafted Art/Sprite/Fog.psd");
+            catalog.vfxSunRay = LoadSprite("Assets/Free Asset - 2D Handcrafted Art/Sprite/SunRays.psd");
+
+            const string vfxPrefabRoot = "Assets/Free Asset - 2D Handcrafted Art/VFXPrefab/";
+            catalog.vfxPrefabDrops = LoadPrefab(vfxPrefabRoot + "Drops.prefab");
+            catalog.vfxPrefabDust = LoadPrefab(vfxPrefabRoot + "Dust.prefab");
+            catalog.vfxPrefabDust2 = LoadPrefab(vfxPrefabRoot + "Dust2.prefab");
+            catalog.vfxPrefabRipple = LoadPrefab(vfxPrefabRoot + "Ripple.prefab");
+            catalog.vfxPrefabSunRays = LoadPrefab(vfxPrefabRoot + "Sun_rays.prefab");
+            catalog.vfxPrefabWaterSuspension = LoadPrefab(vfxPrefabRoot + "WaterSuspension.prefab");
+        }
+
+        private static void WireWallsAndDecals(ArtCatalog catalog, string atlas)
+        {
+            catalog.wallSegments = LoadSprites(
+                atlas,
+                "Wall_A", "Wall_B", "Wall_C", "Wall_D", "Wall_E", "Wall_F",
+                "Wall_G", "Wall_H", "Wall_L", "Wall_N", "Wall_R", "Wall_T");
+            catalog.floorDecals = LoadSprites(
+                atlas,
+                "Decal_A", "Decal_B", "Decal_C", "Decal_D", "Decal_E", "Decal_F",
+                "Decal_G", "Decal_H", "Decal_J", "Decal_K", "Decal_L", "Decal_Star",
+                "Decal_AyeA", "Decal_AyeB", "Decal_Spot", "Decal_ShadeA", "Decal_ShadeB");
+        }
+
+        private static void WireDungeonTaleEnvironment(ArtCatalog catalog, string atlas)
+        {
+            catalog.dungeonBanners = LoadSprites(atlas, "Prop_Env_C", "Prop_Env_C_D", "Prop_Env_C_L", "Prop_Env_C_R", "Prop_Env_C_R_B", "Prop_Env_I");
+            catalog.dungeonPaintings = LoadSprites(atlas, "Prop_Env_J", "Prop_Env_K");
+            catalog.dungeonBooks = LoadSprites(atlas, "Prop_Env_U");
+            catalog.dungeonPipes = LoadSprites(atlas, "Prop_Pipe_a", "Prop_Pipe_B", "Prop_Pipe_C");
+            catalog.dungeonRoots = LoadSprites(atlas, "Prop_Root_A", "Prop_Root_B", "Prop_Root_C", "Prop_Root_D", "Prop_Root_E", "Prop_Root_F", "Prop_Root_G", "Prop_Root_K");
+            catalog.dungeonVases = LoadSprites(atlas, "Prop_Vase_A", "Prop_Vase_B", "Prop_Vase_C", "Prop_Vase_D", "Prop_Vase_E");
+            catalog.dungeonTrees = LoadSprites(atlas, "Prop_TreeA", "Prop_TreeB", "Prop_TreeC");
+            catalog.dungeonWebs = LoadSprites(atlas, "Prop_Web");
+            catalog.dungeonChains = LoadSprites(atlas, "Prop_Chain_A", "Prop_Chain_B");
+            catalog.dungeonCandles = LoadSprites(atlas, "Prop_Candles");
+            catalog.dungeonBones = LoadSprites(atlas, "Prop_Bone", "Prop_Skull");
+            catalog.dungeonGravestones = LoadSprites(atlas, "Prop_Env_Z", "Prop_Env_L");
+            catalog.dungeonFlags = LoadSprites(atlas, "Prop_Env_C_L", "Prop_Env_C_R");
+            catalog.dungeonMiscEnv = LoadSprites(
+                atlas,
+                "Prop_Env_A", "Prop_Env_B", "Prop_Env_D", "Prop_Env_E", "Prop_Env_F",
+                "Prop_Env_G", "Prop_Env_H", "Prop_Env_M", "Prop_Env_O", "Prop_Env_P",
+                "Prop_Hand", "Prop_GrassA", "Prop_GrassB", "Prop_Green", "Prop_Dirt", "Prop_Shrooms");
+        }
+
+        private static void WireMedievalDungeonProps(ArtCatalog catalog)
+        {
+            const string medieval = "Assets/Medieval_pixel_art_asset_FREE/Textures/Medieval_props_free.png";
+            Sprite[] all = LoadAllSpritesFromTexture(medieval);
+            catalog.dungeonLeverOn = GetSpriteAt(all, 0);
+            catalog.dungeonWindow = GetSpriteAt(all, 2);
+            catalog.dungeonDoorClosed = GetSpriteAt(all, 3);
+            catalog.dungeonDoorOpen = GetSpriteAt(all, 4);
+            catalog.dungeonDoorBarred = GetSpriteAt(all, 5);
+            catalog.dungeonDoorEmpty = GetSpriteAt(all, 6);
+            catalog.dungeonChestClosed = GetSpriteAt(all, 7);
+            catalog.dungeonChestOpen = GetSpriteAt(all, 8);
+            catalog.dungeonBarrel = GetSpriteAt(all, 12);
+            catalog.dungeonCrate = GetSpriteAt(all, 11);
+            catalog.dungeonLeverOff = GetSpriteAt(all, 14);
+            catalog.dungeonTorchStatic = GetSpriteAt(all, 23);
+            catalog.dungeonShield = GetSpriteAt(all, 22);
+            catalog.dungeonBridgeFloor = GetSpriteAt(all, 19);
+            catalog.dungeonChainsMedieval = SliceSprites(all, 15, 2);
+            catalog.dungeonLadders = SliceSprites(all, 17, 2);
+            catalog.dungeonRailings = SliceSprites(all, 19, 5);
+            catalog.dungeonUncertain = SliceSprites(all, 1, 1);
+        }
+
+        private static void WireExternalTilesets(ArtCatalog catalog)
+        {
+            catalog.medievalFloors = SliceSprites(LoadAllSpritesFromTexture("Assets/Medieval_pixel_art_asset_FREE/Textures/Medieval_tiles_free2.png"), 0, 12);
+            catalog.medievalProps = LoadAllSpritesFromTexture("Assets/Medieval_pixel_art_asset_FREE/Textures/Medieval_props_free.png");
+            catalog.jungleGrass = LoadTextureSprites(
+                "Assets/Skipan's Jungle Sprites/Grass/Grass_01.png",
+                "Assets/Skipan's Jungle Sprites/Grass/Grass_02.png",
+                "Assets/Skipan's Jungle Sprites/Grass/Grass_03.png",
+                "Assets/Skipan's Jungle Sprites/Grass/Grass_04.png",
+                "Assets/Skipan's Jungle Sprites/Grass/Grass_05.png");
+            catalog.jungleTrees = LoadTextureSprites(
+                "Assets/Skipan's Jungle Sprites/Trees/Tree_01.png",
+                "Assets/Skipan's Jungle Sprites/Trees/Tree_02.png",
+                "Assets/Skipan's Jungle Sprites/Trees/Tree_03.png",
+                "Assets/Skipan's Jungle Sprites/Trees/BigTree_01.png",
+                "Assets/Skipan's Jungle Sprites/Trees/BigTree_02.png");
+            catalog.jungleRocks = LoadTextureSprites(
+                "Assets/Skipan's Jungle Sprites/Rocks/Rock_01.png",
+                "Assets/Skipan's Jungle Sprites/Rocks/Rock_02.png",
+                "Assets/Skipan's Jungle Sprites/Rocks/Rock_03.png",
+                "Assets/Skipan's Jungle Sprites/Rocks/RockGroup_01.png",
+                "Assets/Skipan's Jungle Sprites/Rocks/RockGroup_02.png",
+                "Assets/Skipan's Jungle Sprites/Rocks/RockPlatform_01.png");
+            catalog.jungleVegetation = LoadTextureSprites(
+                "Assets/Skipan's Jungle Sprites/Vegetation/Moss_01.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Moss_02.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Moss_03.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Mushroom_01.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Mushroom_02.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Mushroom_03.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Bush_01.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Flower_01.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Flower_02.png",
+                "Assets/Skipan's Jungle Sprites/Vegetation/Reed_01.png");
+            catalog.handcraftedMoss = LoadTextureSprites(
+                "Assets/Free Asset - 2D Handcrafted Art/Sprite/Moss1/_1.png",
+                "Assets/Free Asset - 2D Handcrafted Art/Sprite/Moss1/_2.png",
+                "Assets/Free Asset - 2D Handcrafted Art/Sprite/Moss1/_3.png",
+                "Assets/Free Asset - 2D Handcrafted Art/Sprite/Moss1/_4.png",
+                "Assets/Free Asset - 2D Handcrafted Art/Sprite/Moss1/_5.png");
+            catalog.gameItemDecor = LoadSprites(
+                "Assets/Tileset/Dungeon Tale/Assets/Sprites/Atlas.png",
+                "Char_Trader", "Prop_Vase_A", "Prop_Candles", "Prop_Bone", "Prop_Skull");
+            catalog.hillsBackdrop = LoadTextureSprites(
+                "Assets/Skipan's Jungle Sprites/Water Miscs/Lake_01.png",
+                "Assets/Skipan's Jungle Sprites/Misc/RaySparkles_01.png",
+                "Assets/Skipan's Jungle Sprites/Dirt/GrassPlatform_01.png",
+                "Assets/Skipan's Jungle Sprites/Dirt/GrassPlatform_02.png");
+        }
+
+        private static Sprite GetSpriteAt(Sprite[] sprites, int index)
+        {
+            if (sprites == null || index < 0 || index >= sprites.Length)
+            {
+                return null;
+            }
+
+            return sprites[index];
+        }
+
+        private static Sprite[] SliceSprites(Sprite[] sprites, int start, int count)
+        {
+            if (sprites == null || sprites.Length == 0 || count <= 0)
+            {
+                return System.Array.Empty<Sprite>();
+            }
+
+            int end = Mathf.Min(sprites.Length, start + count);
+            if (start >= end)
+            {
+                return System.Array.Empty<Sprite>();
+            }
+
+            var slice = new Sprite[end - start];
+            for (int i = start; i < end; i++)
+            {
+                slice[i - start] = sprites[i];
+            }
+
+            return slice;
+        }
+
+        private static Sprite[] LoadSpriteSequence(string texturePath, string prefix, int startIndex, int count)
+        {
+            var sprites = new Sprite[count];
+            for (int i = 0; i < count; i++)
+            {
+                sprites[i] = LoadSprite(texturePath, prefix + (startIndex + i));
+            }
+
+            return sprites;
+        }
+
+        private static Sprite[] LoadAllSpritesFromTexture(string texturePath)
+        {
+            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(texturePath);
+            int spriteCount = 0;
+            for (int i = 0; i < assets.Length; i++)
+            {
+                if (assets[i] is Sprite)
+                {
+                    spriteCount++;
+                }
+            }
+
+            if (spriteCount == 0)
+            {
+                return System.Array.Empty<Sprite>();
+            }
+
+            var sprites = new Sprite[spriteCount];
+            int index = 0;
+            for (int i = 0; i < assets.Length; i++)
+            {
+                if (assets[i] is Sprite sprite)
+                {
+                    sprites[index++] = sprite;
+                }
+            }
+
+            System.Array.Sort(sprites, (a, b) => string.CompareOrdinal(a.name, b.name));
+            return sprites;
+        }
+
+        private static GameObject LoadPrefab(string path)
+        {
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
         private static void CreateOrUpdateTileCatalog()

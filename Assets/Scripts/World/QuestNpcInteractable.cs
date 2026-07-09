@@ -1,6 +1,5 @@
 using UnityEngine;
-using AetherEcho.Player;
-using AetherEcho.UI;
+using AetherEcho.World;
 
 namespace AetherEcho.World
 {
@@ -10,41 +9,11 @@ namespace AetherEcho.World
         [SerializeField] private float interactRadiusMeters = 2.8f;
 
         public string QuestGiverName => questGiverName;
+        public float InteractRadiusMeters => interactRadiusMeters;
 
         public void Configure(string giverName)
         {
             questGiverName = giverName;
-        }
-
-        private void Update()
-        {
-            if (!Input.GetKeyDown(KeyCode.E))
-            {
-                return;
-            }
-
-            if (QuestDialogUI.Instance != null && QuestDialogUI.Instance.IsOpen)
-            {
-                return;
-            }
-
-            if (VendorUI.Instance != null && VendorUI.Instance.IsOpen)
-            {
-                return;
-            }
-
-            NetworkedCombatant localPlayer = NpcInteractUtility.FindLocalPlayer();
-            if (localPlayer == null)
-            {
-                return;
-            }
-
-            if (Vector3.Distance(transform.position, localPlayer.transform.position) > interactRadiusMeters)
-            {
-                return;
-            }
-
-            localPlayer.CmdInteractWithQuestNpc(questGiverName);
         }
     }
 }

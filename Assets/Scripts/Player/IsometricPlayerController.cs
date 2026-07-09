@@ -160,6 +160,11 @@ namespace AetherEcho.Player
 
             if (Input.GetKeyDown(KeyCode.E))
             {
+                if (NpcInteractUtility.TryHandleNearestInteractableOnKey(transform.position))
+                {
+                    return;
+                }
+
                 TryPickupNearestLoot();
                 return;
             }

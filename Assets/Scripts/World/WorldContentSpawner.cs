@@ -171,6 +171,7 @@ namespace AetherEcho.World
                 facingMode: Rendering.SpriteFacingMode.FixedSouth);
             QuestNpcInteractable interactable = npc.AddComponent<QuestNpcInteractable>();
             interactable.Configure(questGiverName);
+            AddInteractableHint(npc, "[E] Quest — " + questGiverName);
             SphereCollider collider = npc.AddComponent<SphereCollider>();
             collider.radius = 0.9f;
             collider.isTrigger = true;
@@ -195,19 +196,37 @@ namespace AetherEcho.World
 
         private static void SpawnDungeonPortal(Vector3 position, float scale, ArtCatalog art)
         {
+            Sprite portalSprite = art != null ? (art.timeEcho != null ? art.timeEcho : art.spellPulse) : null;
             GameObject portal = WorldPropBuilder.CreateBillboardProp(
                 null,
                 "EchoVaultPortal",
-                art != null ? art.questNpc : null,
+                portalSprite,
                 position,
-                scale * 1.1f,
+                scale * 1.15f,
                 addObstacleCollider: false,
                 isTree: false,
                 facingMode: Rendering.SpriteFacingMode.FixedSouth);
+            TintSprite(portal, new Color(0.55f, 0.85f, 1f, 1f));
             portal.AddComponent<DungeonPortalInteractable>();
+            AddInteractableHint(portal, "[E] Enter Echo Vault");
             SphereCollider collider = portal.AddComponent<SphereCollider>();
             collider.radius = 1.1f;
             collider.isTrigger = true;
+        }
+
+        private static void AddInteractableHint(GameObject target, string hintText)
+        {
+            InteractableWorldHint hint = target.AddComponent<InteractableWorldHint>();
+            hint.Configure(hintText);
+        }
+
+        private static void TintSprite(GameObject target, Color color)
+        {
+            PixelBillboardVisual visual = target.GetComponent<PixelBillboardVisual>();
+            if (visual != null && visual.SpriteRenderer != null)
+            {
+                visual.SpriteRenderer.color = color;
+            }
         }
 
         private static NetworkedEnemy SpawnEnemy(string typeId, Vector3 position, int level)
