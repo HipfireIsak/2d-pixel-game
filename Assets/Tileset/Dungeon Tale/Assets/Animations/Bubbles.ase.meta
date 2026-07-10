@@ -8,6 +8,7 @@ ScriptedImporter:
   assetBundleName: 
   assetBundleVariant: 
   script: {fileID: 11500000, guid: 62a9f0aa5b59740cfbadc7e5f9823bb0, type: 3}
+  importerVersion: 2
   textureImporterSettings:
     alphaSource: 1
     mipMapMode: 0
@@ -404,118 +405,137 @@ ScriptedImporter:
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
-    guid: 1056069353
+    uuid:
+      value0: 1409072589
+      value1: 0
+      value2: 0
+      value3: 0
+    guid: 1409072589
     name: Bubbles
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: Bubbles_Frame_1
+    - name: Frame_1
       frameIndex: 1
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: 1660c2f99e22a9f4eb359d5599f89179
-    - name: Bubbles_Frame_2
+    - name: Frame_2
       frameIndex: 2
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: 250e19af75a9da848ad6fee8a17bec06
-    - name: Bubbles_Frame_3
+    - name: Frame_3
       frameIndex: 3
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 3
         width: 14
         height: 16
       spriteId: 5bcbdf788f2bccc4eaa63cb0454bb2ce
-    - name: Bubbles_Frame_4
+    - name: Frame_4
       frameIndex: 4
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 2
         width: 14
         height: 16
       spriteId: bd1e463aa99c9584dbb47d4710442239
-    - name: Bubbles_Frame_5
+    - name: Frame_5
       frameIndex: 5
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: 27dae7811eab0f746adb79f85133337d
-    - name: Bubbles_Frame_6
+    - name: Frame_6
       frameIndex: 6
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 3
         width: 14
         height: 16
       spriteId: 1164e71c112285c45a2f901f3e0372f0
-    - name: Bubbles_Frame_7
+    - name: Frame_7
       frameIndex: 7
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 2
         width: 14
         height: 16
       spriteId: d31a64e0d8a0af8479623839613ba735
-    - name: Bubbles_Frame_8
+    - name: Frame_8
       frameIndex: 8
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: 933e2967363842a46b0bae2fe863a55a
-    - name: Bubbles_Frame_9
+    - name: Frame_9
       frameIndex: 9
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 3
         width: 14
         height: 16
       spriteId: c02cc317ddb3a424b82f0195930b7c69
-    - name: Bubbles_Frame_10
+    - name: Frame_10
       frameIndex: 10
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 2
         width: 14
         height: 16
       spriteId: 18a255b7c44cf24448db4ede810ffc3f
-    - name: Bubbles_Frame_11
+    - name: Frame_11
       frameIndex: 11
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: 8fbc55a01f58548489b64e48862f5a8c
-    - name: Bubbles_Frame_12
+    - name: Frame_12
       frameIndex: 12
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: de2786b71bd060f48ba14124242d2e91
-    - name: Bubbles_Frame_13
+    - name: Frame_13
       frameIndex: 13
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
         width: 14
         height: 16
       spriteId: dad5a76732be5c24e9790707b796e378
-    - name: Bubbles_Frame_14
+    - name: Frame_14
       frameIndex: 14
+      additiveSortOrder: 0
       cellRect:
         x: 2
         y: 1
@@ -589,3 +609,4 @@ ScriptedImporter:
   secondarySpriteTextures: []
   spritePackingTag: 
   canvasSize: {x: 18, y: 21}
+  previousTextureSize: {x: 128, y: 128}

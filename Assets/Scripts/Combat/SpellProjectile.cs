@@ -48,11 +48,12 @@ namespace AetherEcho.Combat
             maxDistance = spell.targeting.range_meters;
             distanceTraveled = 0f;
             hasHit = false;
-            previousGroundPosition = FlatMovementUtility.SnapToGround(caster.transform.position);
+            Vector3 casterGround = FlatMovementUtility.SnapToGround(caster.transform.position);
+            previousGroundPosition = casterGround;
 
             EnsureVisual(spell.id);
-            Vector3 spawn = FlatMovementUtility.SnapToGround(caster.transform.position);
-            transform.position = spawn + Vector3.up * 0.75f + direction * 0.55f;
+            Vector3 spawnGround = casterGround + direction * 0.55f;
+            transform.position = spawnGround + Vector3.up * 0.75f;
         }
 
         private void EnsureVisual(string spellId)

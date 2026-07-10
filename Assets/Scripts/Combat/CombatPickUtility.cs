@@ -1,6 +1,7 @@
 using UnityEngine;
 using AetherEcho.Core;
 using AetherEcho.Items;
+using AetherEcho.Player;
 using AetherEcho.Rendering;
 
 namespace AetherEcho.Combat
@@ -9,6 +10,11 @@ namespace AetherEcho.Combat
     {
         public static Camera ResolveGameplayCamera()
         {
+            if (LostArkCameraRig.Instance != null && LostArkCameraRig.Instance.TargetCamera != null)
+            {
+                return LostArkCameraRig.Instance.TargetCamera;
+            }
+
             if (Camera.main != null)
             {
                 return Camera.main;
@@ -160,21 +166,93 @@ namespace AetherEcho.Combat
         public static bool TryGetGroundPointUnderCursor(Camera camera, Vector2 screenPosition, out Vector3 groundPoint)
         {
             groundPoint = Vector3.zero;
+            camera = camera != null ? camera : ResolveGameplayCamera();
             if (camera == null)
             {
                 return false;
             }
 
+            float groundY = GameConstants.GroundHeight;
             Ray ray = camera.ScreenPointToRay(screenPosition);
-            var groundPlane = new Plane(Vector3.up, new Vector3(0f, GameConstants.GroundHeight, 0f));
-            if (!groundPlane.Raycast(ray, out float distance))
+            if (Mathf.Abs(ray.direction.y) < 0.0001f)
             {
                 return false;
             }
 
-            groundPoint = ray.GetPoint(distance);
-            groundPoint.y = GameConstants.GroundHeight;
+            float distanceAlongRay = (groundY - ray.origin.y) / ray.direction.y;
+            if (distanceAlongRay < 0f)
+            {
+                return false;
+            }
+
+            groundPoint = ray.GetPoint(distanceAlongRay);
+            groundPoint.y = groundY;
             return true;
+        }
+
+        public static bool TryGetAimPointUnderCursor(
+            Camera camera,
+            Vector2 screenPosition,
+            CombatantState localPlayer,
+            float maxRange,
+            out Vector3 aimPoint)
+        {
+            aimPoint = Vector3.zero;
+            camera = camera != null ? camera : ResolveGameplayCamera();
+            if (camera == null || localPlayer == null)
+            {
+                return false;
+            }
+
+            Vector3 casterPos = localPlayer.transform.position;
+            if (TryPickEnemyAtScreen(camera, screenPosition, localPlayer, out CombatantState enemy))
+            {
+                aimPoint = ClampGroundPointToRange(casterPos, enemy.transform.position, maxRange);
+                return true;
+            }
+
+            if (!TryGetGroundPointUnderCursor(camera, screenPosition, out Vector3 groundPoint))
+            {
+                return false;
+            }
+
+            aimPoint = ClampGroundPointToRange(casterPos, groundPoint, maxRange);
+            return true;
+        }
+
+        public static Vector3 ClampGroundPointToRange(Vector3 casterPos, Vector3 desiredPoint, float maxRange)
+        {
+            Vector3 offset = desiredPoint - casterPos;
+            offset.y = 0f;
+            if (offset.sqrMagnitude < 0.001f)
+            {
+                return casterPos;
+            }
+
+            if (offset.magnitude > maxRange)
+            {
+                offset = offset.normalized * maxRange;
+            }
+
+            Vector3 clamped = casterPos + offset;
+            clamped.y = GameConstants.GroundHeight;
+            return clamped;
+        }
+
+        public static Vector3 ResolveCasterAimOrigin(CombatantState caster)
+        {
+            if (caster == null)
+            {
+                return Vector3.zero;
+            }
+
+            PixelBillboardVisual visual = caster.GetComponent<PixelBillboardVisual>();
+            if (visual != null && visual.SpriteRenderer != null)
+            {
+                return visual.SpriteRenderer.bounds.center;
+            }
+
+            return caster.transform.position + Vector3.up * 0.9f;
         }
 
         public static Rect ToGuiRect(Rect screenSpaceRect)

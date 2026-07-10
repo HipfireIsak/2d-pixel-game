@@ -108,11 +108,18 @@ namespace AetherEcho.UI
                 aimDirection.y = 0f;
                 if (aimDirection.sqrMagnitude < 0.001f)
                 {
-                    aimDirection = localPlayer.transform.forward;
+                    Camera camera = CombatPickUtility.ResolveGameplayCamera();
+                    aimDirection = camera != null ? camera.transform.forward : localPlayer.transform.forward;
+                    aimDirection.y = 0f;
+                }
+
+                if (aimDirection.sqrMagnitude > 0.001f)
+                {
+                    aimDirection.Normalize();
                 }
                 else
                 {
-                    aimDirection.Normalize();
+                    aimDirection = Vector3.forward;
                 }
             }
 
@@ -150,27 +157,29 @@ namespace AetherEcho.UI
             }
 
             Camera camera = CombatPickUtility.ResolveGameplayCamera();
-            if (!CombatPickUtility.TryGetGroundPointUnderCursor(camera, Input.mousePosition, out Vector3 groundPoint))
-            {
-                return casterPos + localPlayer.transform.forward * Mathf.Min(4f, spell.targeting.range_meters);
-            }
-
-            Vector3 offset = groundPoint - casterPos;
-            offset.y = 0f;
             float maxRange = spell.targeting.range_meters;
-            if (offset.magnitude > maxRange)
+            if (CombatPickUtility.TryGetAimPointUnderCursor(
+                    camera,
+                    Input.mousePosition,
+                    localPlayer.CombatantState,
+                    maxRange,
+                    out Vector3 aimPoint))
             {
-                offset = offset.normalized * maxRange;
+                return aimPoint;
             }
 
-            return casterPos + offset;
+            Vector3 fallbackDirection = camera != null
+                ? camera.transform.forward
+                : localPlayer.transform.forward;
+            fallbackDirection.y = 0f;
+            if (fallbackDirection.sqrMagnitude < 0.001f)
+            {
+                fallbackDirection = localPlayer.transform.forward;
+            }
+
+            return casterPos + fallbackDirection.normalized * Mathf.Min(4f, maxRange);
         }
 
-        private static bool TryGetGroundPointUnderCursor(out Vector3 groundPoint)
-        {
-            Camera camera = CombatPickUtility.ResolveGameplayCamera();
-            return CombatPickUtility.TryGetGroundPointUnderCursor(camera, Input.mousePosition, out groundPoint);
-        }
 
         private void OnGUI()
         {
@@ -218,7 +227,8 @@ namespace AetherEcho.UI
 
             if (localPlayer != null && activeSpell.targeting.type != "SelfAOE")
             {
-                Vector3 playerScreen = camera.WorldToScreenPoint(localPlayer.transform.position);
+                Vector3 aimOrigin = CombatPickUtility.ResolveCasterAimOrigin(localPlayer.CombatantState);
+                Vector3 playerScreen = camera.WorldToScreenPoint(aimOrigin);
                 playerScreen.y = Screen.height - playerScreen.y;
                 DrawLine(new Vector2(playerScreen.x, playerScreen.y), new Vector2(screenCenter.x, screenCenter.y), ringColor);
             }

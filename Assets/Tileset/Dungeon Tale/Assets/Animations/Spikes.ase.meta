@@ -8,6 +8,7 @@ ScriptedImporter:
   assetBundleName: 
   assetBundleVariant: 
   script: {fileID: 11500000, guid: 62a9f0aa5b59740cfbadc7e5f9823bb0, type: 3}
+  importerVersion: 2
   textureImporterSettings:
     alphaSource: 1
     mipMapMode: 0
@@ -944,334 +945,380 @@ ScriptedImporter:
   spriteSheetImportData: []
   asepriteLayers:
   - layerIndex: 0
-    guid: 581955807
+    uuid:
+      value0: 3225395995
+      value1: 0
+      value2: 0
+      value3: 0
+    guid: -1069571301
     name: Spikes
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: Spikes_Frame_0
+    - name: Frame_0
       frameIndex: 0
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: fd59ab1660d77bf499180a7a3ca270fc
-    - name: Spikes_Frame_3
+    - name: Frame_3
       frameIndex: 3
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 8e7a36a30de37bd4e8afe430275e6920
-    - name: Spikes_Frame_4
+    - name: Frame_4
       frameIndex: 4
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 661946305bd50e144b291a236ccd70b2
-    - name: Spikes_Frame_6
+    - name: Frame_6
       frameIndex: 6
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: b05acc7a862ddf9409afa371168f9d50
-    - name: Spikes_Frame_7
+    - name: Frame_7
       frameIndex: 7
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: e60d8a6519bfc9f498a6e9f103659f4e
-    - name: Spikes_Frame_15
+    - name: Frame_15
       frameIndex: 15
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 68e8a65f1d35432418beb33b3bb434d6
-    - name: Spikes_Frame_18
+    - name: Frame_18
       frameIndex: 18
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 37297483c92d5a4468d29757907c8d58
-    - name: Spikes_Frame_23
+    - name: Frame_23
       frameIndex: 23
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: b5182d910d5ae34479ae2956a54a8453
-    - name: Spikes_Frame_24
+    - name: Frame_24
       frameIndex: 24
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: af363b258697b6a42b97c15c2c8e9525
-    - name: Spikes_Frame_25
+    - name: Frame_25
       frameIndex: 25
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: b5c6863e852260f468ab97075f8f19ef
-    - name: Spikes_Frame_26
+    - name: Frame_26
       frameIndex: 26
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 946a5f8b2fecf034fab8bf2d19d212d3
-    - name: Spikes_Frame_27
+    - name: Frame_27
       frameIndex: 27
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: b72813c80c058744c86cfa4ad622c55e
-    - name: Spikes_Frame_28
+    - name: Frame_28
       frameIndex: 28
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 6e26cd67f20a2b241b8c2b5e088f0232
-    - name: Spikes_Frame_29
+    - name: Frame_29
       frameIndex: 29
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 0879a73ad4483804a87b288e6811640b
-    - name: Spikes_Frame_30
+    - name: Frame_30
       frameIndex: 30
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: eb6730ae353b9d54f89effe62773eaaf
-    - name: Spikes_Frame_31
+    - name: Frame_31
       frameIndex: 31
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 6067ea5c6c4a1ef44825d398ac93e66d
-    - name: Spikes_Frame_32
+    - name: Frame_32
       frameIndex: 32
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: ce2baa30b6baf8a48b653c4f8f814b8a
-    - name: Spikes_Frame_33
+    - name: Frame_33
       frameIndex: 33
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: a6750034a739c4d4496686da12afa546
-    - name: Spikes_Frame_34
+    - name: Frame_34
       frameIndex: 34
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 60e781daa22ea464182b97ff33b57bfa
-    - name: Spikes_Frame_35
+    - name: Frame_35
       frameIndex: 35
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: af36cdafe2704934b976040308fc136b
-    - name: Spikes_Frame_36
+    - name: Frame_36
       frameIndex: 36
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 43914f1f4c4c81040a4ac1da5b5d5f48
-    - name: Spikes_Frame_37
+    - name: Frame_37
       frameIndex: 37
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 05debd7f853c4ec4fa67fd1cb3e588fb
-    - name: Spikes_Frame_38
+    - name: Frame_38
       frameIndex: 38
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: bbb334334adbcb141b94a1c182701972
-    - name: Spikes_Frame_39
+    - name: Frame_39
       frameIndex: 39
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 5511d3c57ffeb164a918a8177f26e39f
-    - name: Spikes_Frame_40
+    - name: Frame_40
       frameIndex: 40
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: ad98ed8e4d17e704d818ccdcd936a553
-    - name: Spikes_Frame_1
+    - name: Frame_1
       frameIndex: 1
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 59ef06aa23715c04485efbfe1506a527
-    - name: Spikes_Frame_2
+    - name: Frame_2
       frameIndex: 2
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 87b4e95f05399074aa99a909e773be49
-    - name: Spikes_Frame_5
+    - name: Frame_5
       frameIndex: 5
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 80893aea5bfaa9f4d8127a82b5f08a2d
-    - name: Spikes_Frame_8
+    - name: Frame_8
       frameIndex: 8
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: c312ed1bbd1b6ef4c91dd9aada6b048c
-    - name: Spikes_Frame_9
+    - name: Frame_9
       frameIndex: 9
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: b721bd40a1a3f1740a06e248cf2b1277
-    - name: Spikes_Frame_10
+    - name: Frame_10
       frameIndex: 10
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 194379c119c4b64478ecdc979a744b8f
-    - name: Spikes_Frame_11
+    - name: Frame_11
       frameIndex: 11
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: b609be20356c85d4a9b82dcf5c3bf1dc
-    - name: Spikes_Frame_12
+    - name: Frame_12
       frameIndex: 12
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 4fa4443a75b80aa4880255e6c554d09e
-    - name: Spikes_Frame_13
+    - name: Frame_13
       frameIndex: 13
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 676051c3c6788f34390cbacd7dc8a101
-    - name: Spikes_Frame_14
+    - name: Frame_14
       frameIndex: 14
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 73a40f5482230b34d8d46eafd29ccfa3
-    - name: Spikes_Frame_16
+    - name: Frame_16
       frameIndex: 16
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 818e94eeed020204ca53a981e43e4f94
-    - name: Spikes_Frame_17
+    - name: Frame_17
       frameIndex: 17
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: fc69790f82e0ed04281bd2d8396f171a
-    - name: Spikes_Frame_19
+    - name: Frame_19
       frameIndex: 19
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: c1b7cefecb838ae49a23ccd7d8290f57
-    - name: Spikes_Frame_20
+    - name: Frame_20
       frameIndex: 20
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 865da94d5432530438a2328d7a6ec773
-    - name: Spikes_Frame_21
+    - name: Frame_21
       frameIndex: 21
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
         width: 161
         height: 41
       spriteId: 332c91fa4f7b2184aa1f1a6836b23f3d
-    - name: Spikes_Frame_22
+    - name: Frame_22
       frameIndex: 22
+      additiveSortOrder: 0
       cellRect:
         x: 1
         y: 1
@@ -1345,3 +1392,4 @@ ScriptedImporter:
   secondarySpriteTextures: []
   spritePackingTag: 
   canvasSize: {x: 18, y: 34}
+  previousTextureSize: {x: 512, y: 1024}
